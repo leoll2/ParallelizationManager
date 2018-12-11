@@ -136,7 +136,9 @@ std::ostream& operator<<(std::ostream& os, const Task& t) {
 
 
 
-Manager::Manager(unsigned pool_size) : n_threads(pool_size)
+Manager::Manager(unsigned pool_size) : 
+	n_threads(pool_size),
+	task(nullptr)
 {
 
 	/* TODO: allocate a pool of threads*/
@@ -150,7 +152,17 @@ Manager::~Manager()
 }
 
 
-void Manager::add_task(Task& t) {
+void Manager::add_task(Task& t)
+{
 
-	/* TODO: aggiungi task */
+	task = &t;
+}
+
+
+void* Manager::run_task()
+{
+
+	task->run();
+
+	return nullptr;
 }

@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iostream>
 #include <map>
+#include <queue>
 #include <utility>
 #include <vector>
 
@@ -28,14 +29,16 @@ class Task
 				~Activity();
 		};
 
-		enum Color {WHITE, GREY, BLACK};	/**< used for DAG verification 
+		enum Color {WHITE, GREY, BLACK};	/**< used for DAG verification:
 												 WHITE: node not explored yet 
 												 GREY: node currently being explored
 												 BLACK: node explored and all its descendants */
 
 		std::vector<Activity> activities;	///< dependencies of the activies in the task
+		std::priority_queue<int> ready_q;	///< activities ready to execute (all dependencies satisfied)
 
 		bool DFS_traverse(int a, std::vector<Color>& colors);
+		void run() {std::cout << "Eseguo il task!!!" << std::endl; }	// SHOULD BE REMOVED!!!
 
 	public:
 		Task();
@@ -43,9 +46,11 @@ class Task
 		int add_activity(void *(*func)(void *), void *arg);
 		int add_dependency(int src, int dst);
 		int link_ret_to_arg(int src, int dst, unsigned port);
+
 		bool is_DAG();
 		friend std::ostream& operator<<(std::ostream& os, const Task& t);
 		friend std::ostream& operator<<(std::ostream& os, const Activity& a);
+		friend class Manager;
 };
 
 
@@ -53,6 +58,7 @@ class Task
 class Manager
 {
 	private:
+		Task* task;		// TODO: support for multiple tasks
 
 	public:
 		const unsigned n_threads;
@@ -60,6 +66,7 @@ class Manager
 		Manager(unsigned pool_size);
 		~Manager();
 		void add_task(Task& t);
+		void* run_task();	// TODO: add support for multiple tasks
 };
 
 #endif

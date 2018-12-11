@@ -32,7 +32,7 @@ int main() {
 	int a1, a2, a3;
 	int ret;
 
-	Manager(8);
+	Manager m(8);
 
 	Task t;
 
@@ -55,6 +55,9 @@ int main() {
 
 	std::cout << t << std::endl;
 	std::cout << (t.is_DAG() ? "DAG" : "not DAG") << std::endl;
+
+	m.add_task(t);
+	m.run_task();
 
 	return 0;
 }
