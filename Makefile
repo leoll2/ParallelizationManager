@@ -26,5 +26,4 @@ main: main.o manager.o
 
 
 clean:
-	rm *.o \
-	find . -type f -executable -exec rm '{}' \;
+	rm *.o main

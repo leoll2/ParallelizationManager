@@ -19,7 +19,6 @@ void *op2(void *arg)
 }
 
 
-
 int main() {
 
 	int a1, a2;
