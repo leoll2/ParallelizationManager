@@ -1,9 +1,11 @@
 #include <iostream>
+#include <vector>
 
 #include "manager.hpp"
 
+// TODO: template e classe per activities
 
-void *op1(void *arg)
+void *op1(const std::vector<void *>& arg)
 {
 	std::cout << "OP1 executed" << std::endl;
 
@@ -11,7 +13,7 @@ void *op1(void *arg)
 }
 
 
-void *op2(void *arg)
+void *op2(const std::vector<void *>& arg)
 {
 	std::cout << "OP2 executed" << std::endl;
 
@@ -19,21 +21,21 @@ void *op2(void *arg)
 }
 
 
-void *op3(void *arg)
+void *op3(const std::vector<void *>& arg)
 {
 	std::cout << "OP3 executed" << std::endl;
 
 	return NULL;
 }
 
-void *op4(void *arg)
+void *op4(const std::vector<void *>& arg)
 {
 	std::cout << "OP4 executed" << std::endl;
 
 	return NULL;
 }
 
-void *op5(void *arg)
+void *op5(const std::vector<void *>& arg)
 {
 	std::cout << "OP5 executed" << std::endl;
 
@@ -68,7 +70,7 @@ int main() {
 	ret = t.add_dependency(a3, a1);
 	ret = t.add_dependency(a4, a1);
 
-	//t.link_ret_to_arg(a1, a2, 0);
+	//t.link_ret_to_arg(a1, a2, 1);
 
 
 	std::cout << t << std::endl;

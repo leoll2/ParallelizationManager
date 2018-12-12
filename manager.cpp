@@ -3,11 +3,12 @@
 #include "manager.hpp"
 
 
-Task::Activity::Activity(void *(*func)(void *), void *arg) :
+Task::Activity::Activity(void *(*func)(const std::vector<void *>&), void *arg) :
 	routine(func),
-	direct_args(arg),
 	n_unresolved(0)
-{}
+{
+	params.emplace_back(std::make_pair(true, arg));	// direct argument
+}
 
 
 Task::Activity::~Activity() {}
@@ -16,9 +17,9 @@ Task::Activity::~Activity() {}
 std::ostream& operator<<(std::ostream& os, const Task::Activity& a) {
 
 	os << "Activity" << std::endl;
-	os << "Funnel args: ";
-	for (auto const &fa : a.funnel_args)
-		os << (fa.first ? "1 " : "0 ");
+	os << "Parameters: ";
+	for (auto const &arg : a.params)
+		os << (arg.first ? "1 " : "0 ");
 	os << std::endl;
 	os << "# of unresolved dependencies " << a.n_unresolved << std::endl;
 	os << "Dependent ops: ";
@@ -57,8 +58,8 @@ void Task::complete_activity(unsigned id, void *retvalue) {
 		int port = dep.second;
 		// Funnel the return value into the parameter list of the successor (if configured)
 		if (port >= 0) {
-			assert(activities[dep_id].funnel_args[port].first && "Attempt to write in a non-allocated port");
-			activities[dep_id].funnel_args[port].second = retvalue;
+			assert(activities[dep_id].params[port].first && "Attempt to write in a non-allocated port");
+			activities[dep_id].params[port].second = retvalue;
 		}
 		// Resolve dependency for successor activities. If 0 left, put the activity in the ready queue.
 		if (--activities[dep_id].n_unresolved == 0)
@@ -68,8 +69,15 @@ void Task::complete_activity(unsigned id, void *retvalue) {
 
 void Task::run_activity(int id) {
 
-	std::cout << "Eseguo l'attivita #" << id << std::endl;
-	activities[id].routine(NULL);
+	std::cout << "Executing activity #" << id << std::endl;
+
+	std::vector<void *> args;
+	args.reserve(activities[id].params.size());
+	for (auto const &arg : activities[id].params)
+		args.push_back(arg.second);
+
+	activities[id].routine(args);
+
 	complete_activity(id, nullptr);
 }
 
@@ -120,7 +128,7 @@ Task::Task() {}
 Task::~Task() {}
 
 
-int Task::add_activity(void *(*func)(void *), void *arg)
+int Task::add_activity(void *(*func)(const std::vector<void *>&), void *arg)
 {
 	activities.emplace_back(Activity(func, arg));
 	return activities.size() - 1;
@@ -142,7 +150,7 @@ int Task::add_dependency(int src, int dst)
 	// Notify the first activity node about the dependency (without specifying ret port for now)
 	activities[src].dependent_ops[dst] = -1;
 	// Notify the second activity node about the dependency (allocating space for a funneled arg)
-	activities[dst].funnel_args.emplace_back(std::make_pair(false, nullptr));
+	activities[dst].params.emplace_back(std::make_pair(false, nullptr));
 	activities[dst].n_unresolved++;
 
 	return 0;
@@ -155,16 +163,16 @@ int Task::link_ret_to_arg(int src, int dst, unsigned port)
 	if (activities[src].dependent_ops.find(dst) == activities[src].dependent_ops.end())
 		return -1;
 
-	// Make sure the port exists
-	if (port >= activities[dst].funnel_args.size())
+	// Make sure the port is valid
+	if (port == 0 || port >= activities[dst].params.size())
 		return -2;
 	// Make sure the port is not already used
-	if (activities[dst].funnel_args[port].first == true)
+	if (activities[dst].params[port].first == true)
 		return -3;
 
 	// Bind
 	activities[src].dependent_ops[dst] = port;
-	activities[dst].funnel_args[port].first = true;
+	activities[dst].params[port].first = true;
 
 	std::cout << "Bound return to argument" << std::endl;
 	return 0;

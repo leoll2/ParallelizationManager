@@ -25,15 +25,16 @@ class Task
 		class Activity
 		{
 			public:
-				void *(*routine)(void *);			///< routine
-				void *direct_args;					///< direct arguments (not coming from dependencies)
-				std::vector<std::pair<bool, void*> > funnel_args; /**< arguments coming from deps results.
-																	   (port allocated, pointer to arg)*/
+				void *(*routine)(const std::vector<void *>&);///< routine
+				std::vector<std::pair<bool, void*> > params; 
+													/**< routine arguments. 
+														 The first is passed directly, others come from dep results
+														 (port allocated, pointer to arg) */
 				int n_unresolved;					///< no. of yet unresolved dependencies
 				std::map<int, int> dependent_ops;	/**< activities directly depending on this
 														 (op index, ret value port) */
 
-				Activity(void *(*func)(void *), void *arg);
+				Activity(void *(*func)(const std::vector<void *>&), void *arg);
 				~Activity();
 		};
 
@@ -57,7 +58,7 @@ class Task
 	public:
 		Task();
 		~Task();
-		int add_activity(void *(*func)(void *), void *arg);
+		int add_activity(void *(*func)(const std::vector<void *>&), void *arg);
 		int add_dependency(int src, int dst);
 		int link_ret_to_arg(int src, int dst, unsigned port);
 
