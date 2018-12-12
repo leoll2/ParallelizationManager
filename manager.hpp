@@ -9,6 +9,14 @@
 #include <vector>
 
 
+class ComparePrio
+{
+public:
+    bool operator()(std::pair<int, int> p1, std::pair<int, int> p2) {
+        return p1.second > p2.second;
+    }
+};
+
 
 class Task
 {
@@ -29,15 +37,15 @@ class Task
 				~Activity();
 		};
 
-		enum Color {WHITE, GREY, BLACK};					/**< used for DAG verification:
-																 WHITE: node not explored yet 
-																 GREY: node currently being explored
-																 BLACK: node explored and all its descendants */
+		enum class Color {WHITE, GREY, BLACK};		/**< used for DAG verification:
+													 WHITE: node not explored yet 
+													 GREY: node currently being explored
+													 BLACK: node explored and all its descendants */
 
-		std::vector<Activity> activities;					///< all the activities of the task
-		std::priority_queue<std::pair<int, int> > ready_q;	/**< ops ready to execute (all deps satisfied)
-																 (op index, priority) */
-
+		std::vector<Activity> activities;			///< all the activities of the task
+		std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, ComparePrio> ready_q;	
+													/**< ops ready to execute (all deps satisfied)
+														 (op index, priority) */
 
 		void init_ready_q();
 		int schedule();

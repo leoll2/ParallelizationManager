@@ -69,6 +69,7 @@ void Task::complete_activity(unsigned id, void *retvalue) {
 void Task::run_activity(int id) {
 
 	std::cout << "Eseguo l'attivita #" << id << std::endl;
+	activities[id].routine(NULL);
 	complete_activity(id, nullptr);
 }
 
@@ -76,22 +77,22 @@ void Task::run_activity(int id) {
 bool Task::DFS_traverse(int a, std::vector<Color>& colors)
 {
 	// Mark GREY the node with index a
-	colors[a] = GREY; 
+	colors[a] = Color::GREY; 
   
     // For each successor
     for (auto it = activities[a].dependent_ops.begin(); it != activities[a].dependent_ops.end(); ++it) {
     	int suc = it->first;
 
     	// If it is GREY, cycle has been spotted
-    	if (colors[suc] == GREY)
+    	if (colors[suc] == Color::GREY)
     		return false;
 
     	// If white, propagate the DFS
-    	if (colors[suc] == WHITE && DFS_traverse(suc, colors))
+    	if (colors[suc] == Color::WHITE && DFS_traverse(suc, colors))
     		return false;
     }
     // Mark this vertex as processed eventually
-    colors[a] = BLACK; 
+    colors[a] = Color::BLACK; 
   
     return true; 
 }
@@ -100,11 +101,11 @@ bool Task::DFS_traverse(int a, std::vector<Color>& colors)
 bool Task::is_DAG()
 {
 	// Initialize colors to WHITE
-	std::vector<Color> colors(activities.size(), WHITE);
+	std::vector<Color> colors(activities.size(), Color::WHITE);
   
-    // For each vertex, DFS traverse
+	// For each vertex, DFS traverse
 	for (auto &c : colors) {
-		if (c == WHITE)
+		if (c == Color::WHITE)
 			if (DFS_traverse(&c - &colors[0], colors))
 				return false;
 	}
