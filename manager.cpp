@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include "manager.hpp"
 
 
@@ -24,6 +26,50 @@ std::ostream& operator<<(std::ostream& os, const Task::Activity& a) {
 		os << "(" << dep.first << ", " << dep.second << ")";
 	os << std::endl;
 	return os;
+}
+
+
+void Task::init_ready_q()
+{
+	for (auto const &a : activities) {
+		if (a.n_unresolved == 0)
+			ready_q.emplace(std::make_pair(&a - &activities[0], a.dependent_ops.size()));
+	}
+
+	assert(!ready_q.empty() && "No task schedulable!");
+}
+
+
+int Task::schedule()
+{
+	if (ready_q.empty())
+		return -1;
+	auto ret = ready_q.top();
+	ready_q.pop();
+	return ret.first;
+}
+
+
+void Task::complete_activity(unsigned id, void *retvalue) {
+
+	for (auto const &dep : activities[id].dependent_ops) {
+		int dep_id = dep.first;
+		int port = dep.second;
+		// Funnel the return value into the parameter list of the successor (if configured)
+		if (port >= 0) {
+			assert(activities[dep_id].funnel_args[port].first && "Attempt to write in a non-allocated port");
+			activities[dep_id].funnel_args[port].second = retvalue;
+		}
+		// Resolve dependency for successor activities. If 0 left, put the activity in the ready queue.
+		if (--activities[dep_id].n_unresolved == 0)
+			ready_q.emplace(std::make_pair(dep_id, activities[dep_id].dependent_ops.size()));
+	}
+}
+
+void Task::run_activity(int id) {
+
+	std::cout << "Eseguo l'attivita #" << id << std::endl;
+	complete_activity(id, nullptr);
 }
 
 
@@ -162,7 +208,12 @@ void Manager::add_task(Task& t)
 void* Manager::run_task()
 {
 
-	task->run();
+	task->init_ready_q();
+
+	int current;
+	while ((current = task->schedule()) >= 0) {
+		task->run_activity(current);
+	}
 
 	return nullptr;
 }

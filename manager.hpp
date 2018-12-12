@@ -29,16 +29,22 @@ class Task
 				~Activity();
 		};
 
-		enum Color {WHITE, GREY, BLACK};	/**< used for DAG verification:
-												 WHITE: node not explored yet 
-												 GREY: node currently being explored
-												 BLACK: node explored and all its descendants */
+		enum Color {WHITE, GREY, BLACK};					/**< used for DAG verification:
+																 WHITE: node not explored yet 
+																 GREY: node currently being explored
+																 BLACK: node explored and all its descendants */
 
-		std::vector<Activity> activities;	///< dependencies of the activies in the task
-		std::priority_queue<int> ready_q;	///< activities ready to execute (all dependencies satisfied)
+		std::vector<Activity> activities;					///< all the activities of the task
+		std::priority_queue<std::pair<int, int> > ready_q;	/**< ops ready to execute (all deps satisfied)
+																 (op index, priority) */
 
+
+		void init_ready_q();
+		int schedule();
+		void complete_activity(unsigned id, void *retvalue);
 		bool DFS_traverse(int a, std::vector<Color>& colors);
-		void run() {std::cout << "Eseguo il task!!!" << std::endl; }	// SHOULD BE REMOVED!!!
+
+		void run_activity(int id);
 
 	public:
 		Task();
