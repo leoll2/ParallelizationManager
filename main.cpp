@@ -3,28 +3,24 @@
 #include "manager.hpp"
 
 
-class A_Activity : public Activity {
-	public: 
-		A_Activity(void *direct_arg) :
-			Activity(direct_arg)
-		{}
-		virtual unsigned operator() (const std::vector<void *>& arg) {
-			std::cout << "I'm A_Activity" << std::endl;
-			return 8;
-		}
-};
+ACTIVITY(A_Activity)
+{
+	std::cout << "I'm A_Activity" << std::endl;
+	return 8;
+}
 
 
-class B_Activity : public Activity {
-	public: 
-		B_Activity(void *direct_arg) :
-			Activity(direct_arg)
-		{}
-		virtual unsigned operator() (const std::vector<void *>& arg) {
-			std::cout << "I'm B_Activity" << std::endl;
-			return 8;
-		}
-};
+ACTIVITY(B_Activity)
+{
+	std::cout << "I'm B_Activity" << std::endl;
+	return 8;
+}
+
+ACTIVITY(C_Activity)
+{
+	std::cout << "I'm C_Activity" << std::endl;
+	return 8;
+}
 
 
 int main() {
@@ -39,7 +35,7 @@ int main() {
 	A_Activity a2(NULL);
 	B_Activity a3(NULL);
 	B_Activity a4(NULL);
-	A_Activity a5(NULL);
+	C_Activity a5(NULL);
 
 	t.add_activity(a1);
 	t.add_activity(a2);

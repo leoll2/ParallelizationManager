@@ -10,6 +10,18 @@
 #include <vector>
 
 
+/* Handy macro to specify activity code in a compact fashion. */
+#define ACTIVITY(name) \
+    class name : public Activity { \
+		public: \
+			name(void *direct_arg) : Activity(direct_arg) {} \
+			virtual unsigned operator() (const std::vector<void*>& arg); \
+    }; \
+    unsigned name::operator() (const std::vector<void*>& arg)
+
+
+
+
 enum class Color {WHITE, GREY, BLACK};	/**< used for DAG verification:
 											 WHITE: node not explored yet 
 											 GREY: node currently being explored
