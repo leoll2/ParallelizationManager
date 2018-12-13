@@ -3,7 +3,7 @@
 #include "manager.hpp"
 
 
-Task::Activity::Activity(void *(*func)(const std::vector<void *>&), void *arg) :
+Task::Activity::Activity(unsigned (*func)(const std::vector<void *>&), void *arg) :
 	routine(func),
 	n_unresolved(0)
 {
@@ -76,9 +76,10 @@ void Task::run_activity(int id) {
 	for (auto const &arg : activities[id].params)
 		args.push_back(arg.second);
 
-	activities[id].routine(args);
+	//void *ret = (activities[id].routine(args)).get();
+	void *ret = NULL;	// TEST
 
-	complete_activity(id, nullptr);
+	complete_activity(id, ret);
 }
 
 
@@ -128,7 +129,7 @@ Task::Task() {}
 Task::~Task() {}
 
 
-int Task::add_activity(void *(*func)(const std::vector<void *>&), void *arg)
+int Task::add_activity(unsigned (*func)(const std::vector<void *>&), void *arg)
 {
 	activities.emplace_back(Activity(func, arg));
 	return activities.size() - 1;

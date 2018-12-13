@@ -4,9 +4,14 @@
 #include <algorithm>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <queue>
 #include <utility>
 #include <vector>
+
+
+//typedef std::unique_ptr<void *> (*opbody)(const std::vector<void *>&);
+//#define OPBODY(f, arg) ((opbody)(f))(arg)
 
 
 class ComparePrio
@@ -25,7 +30,7 @@ class Task
 		class Activity
 		{
 			public:
-				void *(*routine)(const std::vector<void *>&);///< routine
+				unsigned (*routine)(const std::vector<void *>&);///< routine
 				std::vector<std::pair<bool, void*> > params; 
 													/**< routine arguments. 
 														 The first is passed directly, others come from dep results
@@ -34,7 +39,7 @@ class Task
 				std::map<int, int> dependent_ops;	/**< activities directly depending on this
 														 (op index, ret value port) */
 
-				Activity(void *(*func)(const std::vector<void *>&), void *arg);
+				Activity(unsigned (*func)(const std::vector<void *>&), void *arg);
 				~Activity();
 		};
 
@@ -58,7 +63,7 @@ class Task
 	public:
 		Task();
 		~Task();
-		int add_activity(void *(*func)(const std::vector<void *>&), void *arg);
+		int add_activity(unsigned (*func)(const std::vector<void *>&), void *arg);
 		int add_dependency(int src, int dst);
 		int link_ret_to_arg(int src, int dst, unsigned port);
 
