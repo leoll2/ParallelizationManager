@@ -2,8 +2,10 @@
 
 #include "manager.hpp"
 
+int Activity::ID_gen = 0;
 
-Task::Activity::Activity(unsigned (*func)(const std::vector<void *>&), void *arg) :
+Activity::Activity(unsigned (*func)(const std::vector<void *>&), void *arg) :
+	id(ID_gen++),
 	routine(func),
 	n_unresolved(0)
 {
@@ -11,12 +13,12 @@ Task::Activity::Activity(unsigned (*func)(const std::vector<void *>&), void *arg
 }
 
 
-Task::Activity::~Activity() {}
+Activity::~Activity() {}
 
 
-std::ostream& operator<<(std::ostream& os, const Task::Activity& a) {
+std::ostream& operator<<(std::ostream& os, const Activity& a) {
 
-	os << "Activity" << std::endl;
+	os << "Activity #" << a.id << std::endl;
 	os << "Parameters: ";
 	for (auto const &arg : a.params)
 		os << (arg.first ? "1 " : "0 ");
@@ -24,7 +26,7 @@ std::ostream& operator<<(std::ostream& os, const Task::Activity& a) {
 	os << "# of unresolved dependencies " << a.n_unresolved << std::endl;
 	os << "Dependent ops: ";
 	for (auto const &dep : a.dependent_ops)
-		os << "(" << dep.first << ", " << dep.second << ")";
+		os << "(" << (*(dep.first)).id << ", " << dep.second << ")";
 	os << std::endl;
 	return os;
 }
@@ -33,75 +35,75 @@ std::ostream& operator<<(std::ostream& os, const Task::Activity& a) {
 void Task::init_ready_q()
 {
 	for (auto const &a : activities) {
-		if (a.n_unresolved == 0)
-			ready_q.emplace(std::make_pair(&a - &activities[0], a.dependent_ops.size()));
+		if (a->n_unresolved == 0)
+			ready_q.emplace(std::make_pair(a, a->dependent_ops.size()));
 	}
 
 	assert(!ready_q.empty() && "No task schedulable!");
 }
 
 
-int Task::schedule()
+Activity* Task::schedule()
 {
 	if (ready_q.empty())
-		return -1;
+		return nullptr;
 	auto ret = ready_q.top();
 	ready_q.pop();
 	return ret.first;
 }
 
 
-void Task::complete_activity(unsigned id, void *retvalue) {
+void Task::complete_activity(Activity& a, void *retvalue) {
 
-	for (auto const &dep : activities[id].dependent_ops) {
-		int dep_id = dep.first;
+	for (auto const &dep : a.dependent_ops) {
+		Activity& a_next = *(dep.first);
 		int port = dep.second;
 		// Funnel the return value into the parameter list of the successor (if configured)
 		if (port >= 0) {
-			assert(activities[dep_id].params[port].first && "Attempt to write in a non-allocated port");
-			activities[dep_id].params[port].second = retvalue;
+			assert(a_next.params[port].first && "Attempt to write in a non-allocated port");
+			a_next.params[port].second = retvalue;
 		}
 		// Resolve dependency for successor activities. If 0 left, put the activity in the ready queue.
-		if (--activities[dep_id].n_unresolved == 0)
-			ready_q.emplace(std::make_pair(dep_id, activities[dep_id].dependent_ops.size()));
+		if (--a_next.n_unresolved == 0)
+			ready_q.emplace(std::make_pair(&a_next, a_next.dependent_ops.size()));
 	}
 }
 
-void Task::run_activity(int id) {
+void Task::run_activity(Activity& a) {
 
-	std::cout << "Executing activity #" << id << std::endl;
-
+	std::cout << "Executing activity #" << a.id << std::endl;
 	std::vector<void *> args;
-	args.reserve(activities[id].params.size());
-	for (auto const &arg : activities[id].params)
+	args.reserve(a.params.size());
+	for (auto const &arg : a.params)
 		args.push_back(arg.second);
 
-	//void *ret = (activities[id].routine(args)).get();
-	void *ret = NULL;	// TEST
+	a.routine(args);
 
-	complete_activity(id, ret);
+	void *ret = NULL;	// TODO: DA IMPLEMENTARE
+	complete_activity(a, ret);
 }
 
 
-bool Task::DFS_traverse(int a, std::vector<Color>& colors)
+bool Task::DFS_traverse(Activity& a)
 {
-	// Mark GREY the node with index a
-	colors[a] = Color::GREY; 
-  
-    // For each successor
-    for (auto it = activities[a].dependent_ops.begin(); it != activities[a].dependent_ops.end(); ++it) {
-    	int suc = it->first;
+	// Mark GREY the activity node
+	a.col = Color::GREY; 
 
-    	// If it is GREY, cycle has been spotted
-    	if (colors[suc] == Color::GREY)
-    		return false;
+	// For each successor
+	for (auto &dep : a.dependent_ops) {
+		Activity& suc = *(dep.first);
 
-    	// If white, propagate the DFS
-    	if (colors[suc] == Color::WHITE && DFS_traverse(suc, colors))
+		// If it is GREY, cycle has been spotted
+		if (suc.col == Color::GREY)
+			return false;
+
+		// If white, propagate the DFS
+    	if (suc.col == Color::WHITE && DFS_traverse(suc))
     		return false;
-    }
+	}
+
     // Mark this vertex as processed eventually
-    colors[a] = Color::BLACK; 
+    a.col = Color::BLACK; 
   
     return true; 
 }
@@ -110,12 +112,13 @@ bool Task::DFS_traverse(int a, std::vector<Color>& colors)
 bool Task::is_DAG()
 {
 	// Initialize colors to WHITE
-	std::vector<Color> colors(activities.size(), Color::WHITE);
+	for (auto &a : activities)
+		a->col = Color::WHITE;
   
 	// For each vertex, DFS traverse
-	for (auto &c : colors) {
-		if (c == Color::WHITE)
-			if (DFS_traverse(&c - &colors[0], colors))
+	for (auto &a : activities) {
+		if (a->col == Color::WHITE)
+			if (DFS_traverse(*a))
 				return false;
 	}
   
@@ -129,51 +132,52 @@ Task::Task() {}
 Task::~Task() {}
 
 
-int Task::add_activity(unsigned (*func)(const std::vector<void *>&), void *arg)
+void Task::add_activity(Activity& a)
 {
-	activities.emplace_back(Activity(func, arg));
-	return activities.size() - 1;
+	activities.emplace_back(&a);
 }
 
 
-int Task::add_dependency(int src, int dst)
+int Task::add_dependency(Activity& a_src, Activity& a_dst)
 {
-	// Make sure the activities exist
-	if (src < 0 || dst < 0 || src >= activities.size() || dst >= activities.size())
-		return -1;
+	// TODO:Make sure the activities belong to same task
+	//	return -1;
+
 	// Make sure src and dst are different activities
-	if (src == dst)
+	if (&a_src == &a_dst)
 		return -2;
-	// Make sure the dependency (src->dst) doesn't already exist
-	if (activities[src].dependent_ops.find(dst) != activities[src].dependent_ops.end())
+
+	// TODO: Make sure the dependency (src->dst) doesn't already exist
+	if (a_src.dependent_ops.find(&a_dst) != a_src.dependent_ops.end())
 		return -3;
 
 	// Notify the first activity node about the dependency (without specifying ret port for now)
-	activities[src].dependent_ops[dst] = -1;
+	a_src.dependent_ops[&a_dst] = -1;
 	// Notify the second activity node about the dependency (allocating space for a funneled arg)
-	activities[dst].params.emplace_back(std::make_pair(false, nullptr));
-	activities[dst].n_unresolved++;
+	a_dst.params.emplace_back(std::make_pair(false, nullptr));
+	a_dst.n_unresolved++;
 
 	return 0;
 }
 
 
-int Task::link_ret_to_arg(int src, int dst, unsigned port)
+int Task::link_ret_to_arg(Activity& a_src, Activity& a_dst, unsigned port)
 {
 	// Make sure the dependency (src->dst) was already declared
-	if (activities[src].dependent_ops.find(dst) == activities[src].dependent_ops.end())
+	if (a_src.dependent_ops.find(&a_dst) == a_src.dependent_ops.end())
 		return -1;
 
 	// Make sure the port is valid
-	if (port == 0 || port >= activities[dst].params.size())
+	if (port == 0 || port >= a_dst.params.size())
 		return -2;
+
 	// Make sure the port is not already used
-	if (activities[dst].params[port].first == true)
+	if (a_dst.params[port].first == true)
 		return -3;
 
 	// Bind
-	activities[src].dependent_ops[dst] = port;
-	activities[dst].params[port].first = true;
+	a_src.dependent_ops[&a_dst] = port;
+	a_dst.params[port].first = true;
 
 	std::cout << "Bound return to argument" << std::endl;
 	return 0;
@@ -184,7 +188,7 @@ std::ostream& operator<<(std::ostream& os, const Task& t) {
 
 	os << "=== Task ===" << std::endl;
 	for (auto const &a : t.activities) {
-		os << a << std::endl;
+		os << *a << std::endl;
 	}
 	os << "============" << std::endl;
 	return os;
@@ -193,8 +197,8 @@ std::ostream& operator<<(std::ostream& os, const Task& t) {
 
 
 Manager::Manager(unsigned pool_size) : 
-	n_threads(pool_size),
-	task(nullptr)
+	task(nullptr),
+	n_threads(pool_size)
 {
 
 	/* TODO: allocate a pool of threads*/
@@ -217,12 +221,11 @@ void Manager::add_task(Task& t)
 
 void* Manager::run_task()
 {
-
 	task->init_ready_q();
 
-	int current;
-	while ((current = task->schedule()) >= 0) {
-		task->run_activity(current);
+	Activity *current;
+	while ((current = task->schedule())) {
+		task->run_activity(*current);
 	}
 
 	return nullptr;

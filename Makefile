@@ -1,5 +1,5 @@
 CC = g++
-
+CFLAGS = -Wall 
 
 
 .PHONY: all clean
@@ -11,10 +11,10 @@ all: main
 ################
 
 main.o: main.cpp
-	$(CC) -c main.cpp -o main.o
+	$(CC) $(CFLAGS) -c main.cpp -o main.o
 
 manager.o: manager.cpp
-	$(CC) -c manager.cpp -o manager.o
+	$(CC) $(CFLAGS) -c manager.cpp -o manager.o
 
 
 ################

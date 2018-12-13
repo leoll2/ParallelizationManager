@@ -10,14 +10,37 @@
 #include <vector>
 
 
-//typedef std::unique_ptr<void *> (*opbody)(const std::vector<void *>&);
-//#define OPBODY(f, arg) ((opbody)(f))(arg)
+enum class Color {WHITE, GREY, BLACK};	/**< used for DAG verification:
+											 WHITE: node not explored yet 
+											 GREY: node currently being explored
+											 BLACK: node explored and all its descendants */
+
+class Activity
+{
+	private:
+		static int ID_gen;				///< ID generator
+		int id;							///< ID (for debug purposes only)
+		unsigned (*routine)(const std::vector<void*>&);	///< routine
+		std::vector<std::pair<bool, void*> > params; 	/**< routine arguments.
+															 The first is passed directly, others come from dep results
+															 (port allocated, pointer to arg) */
+		std::map<Activity*, int> dependent_ops;			/**< activities directly depending on this
+															 (operation, ret value port) */
+		int n_unresolved;				///< no. of yet unresolved dependencies (updated during execution)
+		Color col;						///< used for DAG verification
+
+	public:
+		Activity(unsigned (*func)(const std::vector<void*>&), void *arg);
+		~Activity();
+		friend std::ostream& operator<<(std::ostream& os, const Activity& a);
+		friend class Task;
+};
 
 
 class ComparePrio
 {
 public:
-    bool operator()(std::pair<int, int> p1, std::pair<int, int> p2) {
+    bool operator()(std::pair<Activity*, int> p1, std::pair<Activity*, int> p2) {
         return p1.second > p2.second;
     }
 };
@@ -27,49 +50,25 @@ class Task
 {
 	private:
 
-		class Activity
-		{
-			public:
-				unsigned (*routine)(const std::vector<void *>&);///< routine
-				std::vector<std::pair<bool, void*> > params; 
-													/**< routine arguments. 
-														 The first is passed directly, others come from dep results
-														 (port allocated, pointer to arg) */
-				int n_unresolved;					///< no. of yet unresolved dependencies
-				std::map<int, int> dependent_ops;	/**< activities directly depending on this
-														 (op index, ret value port) */
-
-				Activity(unsigned (*func)(const std::vector<void *>&), void *arg);
-				~Activity();
-		};
-
-		enum class Color {WHITE, GREY, BLACK};		/**< used for DAG verification:
-													 WHITE: node not explored yet 
-													 GREY: node currently being explored
-													 BLACK: node explored and all its descendants */
-
-		std::vector<Activity> activities;			///< all the activities of the task
-		std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, ComparePrio> ready_q;	
+		std::vector<Activity*> activities;			///< all the activities of the task
+		std::priority_queue<std::pair<Activity*, int>, std::vector<std::pair<Activity*, int>>, ComparePrio> ready_q;	
 													/**< ops ready to execute (all deps satisfied)
-														 (op index, priority) */
-
+														 (operation, priority) */
 		void init_ready_q();
-		int schedule();
-		void complete_activity(unsigned id, void *retvalue);
-		bool DFS_traverse(int a, std::vector<Color>& colors);
+		Activity* schedule();
+		void complete_activity(Activity& a, void *retvalue);
+		bool DFS_traverse(Activity& a);
 
-		void run_activity(int id);
+		void run_activity(Activity& a);
 
 	public:
 		Task();
 		~Task();
-		int add_activity(unsigned (*func)(const std::vector<void *>&), void *arg);
-		int add_dependency(int src, int dst);
-		int link_ret_to_arg(int src, int dst, unsigned port);
-
+		void add_activity(Activity& a);
+		int add_dependency(Activity& a_src, Activity& a_dst);
+		int link_ret_to_arg(Activity& a_src, Activity& a_dst, unsigned port);
 		bool is_DAG();
 		friend std::ostream& operator<<(std::ostream& os, const Task& t);
-		friend std::ostream& operator<<(std::ostream& os, const Activity& a);
 		friend class Manager;
 };
 
