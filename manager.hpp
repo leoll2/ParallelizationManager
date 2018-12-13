@@ -20,7 +20,6 @@ class Activity
 	private:
 		static int ID_gen;				///< ID generator
 		int id;							///< ID (for debug purposes only)
-		unsigned (*routine)(const std::vector<void*>&);	///< routine
 		std::vector<std::pair<bool, void*> > params; 	/**< routine arguments.
 															 The first is passed directly, others come from dep results
 															 (port allocated, pointer to arg) */
@@ -30,8 +29,11 @@ class Activity
 		Color col;						///< used for DAG verification
 
 	public:
-		Activity(unsigned (*func)(const std::vector<void*>&), void *arg);
+		Activity(void *direct_arg);
 		~Activity();
+
+		virtual unsigned operator() (const std::vector<void *>& arg) = 0;
+
 		friend std::ostream& operator<<(std::ostream& os, const Activity& a);
 		friend class Task;
 };

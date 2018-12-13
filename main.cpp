@@ -2,37 +2,30 @@
 
 #include "manager.hpp"
 
-// TODO: template e classe per activities
 
-unsigned op0(const std::vector<void *>& arg)
-{
-	std::cout << "OP0 executed" << std::endl;
-	return 8;
-}
+class A_Activity : public Activity {
+	public: 
+		A_Activity(void *direct_arg) :
+			Activity(direct_arg)
+		{}
+		virtual unsigned operator() (const std::vector<void *>& arg) {
+			std::cout << "I'm A_Activity" << std::endl;
+			return 8;
+		}
+};
 
-unsigned op1(const std::vector<void *>& arg)
-{
-	std::cout << "OP1 executed" << std::endl;
-	return 8;
-}
 
-unsigned op2(const std::vector<void *>& arg)
-{
-	std::cout << "OP2 executed" << std::endl;
-	return 8;
-}
+class B_Activity : public Activity {
+	public: 
+		B_Activity(void *direct_arg) :
+			Activity(direct_arg)
+		{}
+		virtual unsigned operator() (const std::vector<void *>& arg) {
+			std::cout << "I'm B_Activity" << std::endl;
+			return 8;
+		}
+};
 
-unsigned op3(const std::vector<void *>& arg)
-{
-	std::cout << "OP3 executed" << std::endl;
-	return 8;
-}
-
-unsigned op4(const std::vector<void *>& arg)
-{
-	std::cout << "OP4 executed" << std::endl;
-	return 8;
-}
 
 int main() {
 
@@ -42,11 +35,11 @@ int main() {
 
 	Task t;
 
-	Activity a1(op0, NULL);
-	Activity a2(op1, NULL);
-	Activity a3(op2, NULL);
-	Activity a4(op3, NULL);
-	Activity a5(op4, NULL);
+	A_Activity a1(NULL);
+	A_Activity a2(NULL);
+	B_Activity a3(NULL);
+	B_Activity a4(NULL);
+	A_Activity a5(NULL);
 
 	t.add_activity(a1);
 	t.add_activity(a2);

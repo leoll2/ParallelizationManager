@@ -4,12 +4,11 @@
 
 int Activity::ID_gen = 0;
 
-Activity::Activity(unsigned (*func)(const std::vector<void *>&), void *arg) :
+Activity::Activity(void *direct_arg) :
 	id(ID_gen++),
-	routine(func),
 	n_unresolved(0)
 {
-	params.emplace_back(std::make_pair(true, arg));	// direct argument
+	params.emplace_back(std::make_pair(true, direct_arg));
 }
 
 
@@ -58,6 +57,7 @@ void Task::complete_activity(Activity& a, void *retvalue) {
 	for (auto const &dep : a.dependent_ops) {
 		Activity& a_next = *(dep.first);
 		int port = dep.second;
+
 		// Funnel the return value into the parameter list of the successor (if configured)
 		if (port >= 0) {
 			assert(a_next.params[port].first && "Attempt to write in a non-allocated port");
@@ -77,7 +77,7 @@ void Task::run_activity(Activity& a) {
 	for (auto const &arg : a.params)
 		args.push_back(arg.second);
 
-	a.routine(args);
+	a(args);			// NUOVO CODICE
 
 	void *ret = NULL;	// TODO: DA IMPLEMENTARE
 	complete_activity(a, ret);
@@ -140,7 +140,7 @@ void Task::add_activity(Activity& a)
 
 int Task::add_dependency(Activity& a_src, Activity& a_dst)
 {
-	// TODO:Make sure the activities belong to same task
+	// Make sure the activities belong to the task
 	//	return -1;
 
 	// Make sure src and dst are different activities
