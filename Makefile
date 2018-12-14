@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -Wall
-DEBUG = -DDEBUG
-
+#DEBUG = -DDEBUG
+DEBUG = 
 
 .PHONY: all clean
 

@@ -5,42 +5,66 @@
 
 ACTIVITY(A_Activity)
 {
-	std::cout << "I'm A_Activity" << std::endl;
-	int a = 14;
+	int res = 8;
 
-	RETURN(a)
-	//NO_RETURN()
+	RETURN(res)
 }
 
 
 ACTIVITY(B_Activity)
 {
-	std::cout << "I'm B_Activity" << std::endl;
+	GET_ARG(a, int, 1)
+
+	int res = a + 5;
 	
-	NO_RETURN()
+	RETURN(res)
 }
 
 ACTIVITY(C_Activity)
 {
-	std::cout << "I'm C_Activity" << std::endl;
+	GET_ARG(a, int, 1)
+
+	int res = 2 * a;
+
+	RETURN(res)
+}
+
+
+ACTIVITY(D_Activity)
+{
+	GET_ARG(a, int, 1)
+
+	int res = a - 1;
+
+	RETURN(res)
+}
+
+
+ACTIVITY(E_Activity)
+{
+	GET_ARG(a, int, 1)
+	GET_ARG(b, int, 2)
+
+	int res = a + b;
 	
-	NO_RETURN()
+	RETURN(res)
 }
 
 
 int main() {
 
-	int ret;
+	void *ret;
+	int result;
 
 	Manager m(8);
 
-	Task t;
+	Task t(ret);
 
 	A_Activity a1(NULL);
-	A_Activity a2(NULL);
-	B_Activity a3(NULL);
-	B_Activity a4(NULL);
-	C_Activity a5(NULL);
+	B_Activity a2(NULL);
+	C_Activity a3(NULL);
+	D_Activity a4(NULL);
+	E_Activity a5(NULL, true);
 
 	t.add_activity(a1);
 	t.add_activity(a2);
@@ -48,20 +72,27 @@ int main() {
 	t.add_activity(a4);
 	t.add_activity(a5);
 
-	ret = t.add_dependency(a1, a2);
-	ret = t.add_dependency(a2, a3);
-	ret = t.add_dependency(a2, a4);
-	ret = t.add_dependency(a3, a5);
-	ret = t.add_dependency(a4, a5);
+	t.add_dependency(a1, a2);
+	t.add_dependency(a2, a3);
+	t.add_dependency(a2, a4);
+	t.add_dependency(a3, a5);
+	t.add_dependency(a4, a5);
 
-	//t.link_ret_to_arg(a1, a2, 1);
+	t.link_ret_to_arg(a1, a2, 1);
+	t.link_ret_to_arg(a2, a3, 1);
+	t.link_ret_to_arg(a2, a4, 1);
+	t.link_ret_to_arg(a3, a5, 1);
+	t.link_ret_to_arg(a4, a5, 2);
 
 
 	std::cout << t << std::endl;
-	std::cout << "Checking if the task is Directed Acyclic Graph: " << (t.is_DAG() ? "yes" : "no") << std::endl;
 
 	m.add_task(t);
 	m.run_task();
+
+	RETRIEVE_RESULT(result, ret, int);
+
+	std::cout << "Final result: " << result << std::endl;
 
 	return 0;
 }

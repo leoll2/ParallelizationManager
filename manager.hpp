@@ -33,11 +33,18 @@
 #define ACTIVITY(name) \
     class name : public Activity { \
 		public: \
-			name(void *direct_arg) : Activity(direct_arg) {} \
+			name(void *direct_arg, bool endpoint = false) : Activity(direct_arg, endpoint) {} \
 			virtual unsigned operator() (const std::vector<void*>& args, void **_retbuf); \
     }; \
     unsigned name::operator() (const std::vector<void*>& args, void **_retbuf)
 
+
+#define GET_ARG(name, type, port) \
+    type name = *(type*)args[(port)];
+
+
+#define RETRIEVE_RESULT(dst, src, type) \
+    dst = *((type*)(src));
 
 
 
@@ -57,10 +64,12 @@ class Activity
 		std::map<Activity*, int> dependent_ops;			/**< activities directly depending on this
 															 (operation, ret value port) */
 		int n_unresolved;				///< no. of yet unresolved dependencies (updated during execution)
+		bool is_endpoint;				///< is it the final task?
+		void ** final_res;				///< if final task, pointer to buffer to store the result
 		Color col;						///< used for DAG verification
 
 	public:
-		Activity(void *direct_arg);
+		Activity(void *direct_arg, bool endpoint = false);
 		~Activity();
 
 		virtual unsigned operator() (const std::vector<void *>& args, void **_retbuf) = 0;
@@ -87,20 +96,23 @@ class Task
 		std::priority_queue<std::pair<Activity*, int>, std::vector<std::pair<Activity*, int>>, ComparePrio> ready_q;	
 													/**< ops ready to execute (all deps satisfied)
 														 (operation, priority) */
+		bool has_endpoint;							///< used to verify that there's one and only one endpoint activity
+		void **result;								///< pointer to buffer to store the final result of the task
+
 		void init_ready_q();
 		Activity* schedule();
 		void complete_activity(Activity& a, void *retvalue, unsigned retsize);
-		bool DFS_traverse(Activity& a);
+		bool DFS_traverse(Activity& a) const;
 
 		void run_activity(Activity& a);
 
 	public:
-		Task();
+		Task(void*& res);
 		~Task();
 		void add_activity(Activity& a);
 		int add_dependency(Activity& a_src, Activity& a_dst);
 		int link_ret_to_arg(Activity& a_src, Activity& a_dst, unsigned port);
-		bool is_DAG();
+		bool is_DAG() const;
 		friend std::ostream& operator<<(std::ostream& os, const Task& t);
 		friend class Manager;
 };

@@ -4,9 +4,10 @@
 
 int Activity::ID_gen = 0;
 
-Activity::Activity(void *direct_arg) :
+Activity::Activity(void *direct_arg, bool endp) :
 	id(ID_gen++),
-	n_unresolved(0)
+	n_unresolved(0),
+	is_endpoint(endp)
 {
 	params.emplace_back(std::make_pair(true, direct_arg));
 }
@@ -25,7 +26,7 @@ std::ostream& operator<<(std::ostream& os, const Activity& a) {
 	os << "# of unresolved dependencies " << a.n_unresolved << std::endl;
 	os << "Dependent ops: ";
 	for (auto const &dep : a.dependent_ops)
-		os << "(" << (*(dep.first)).id << ", " << dep.second << ")";
+		os << "(" << (*(dep.first)).id << " [" << dep.second << "])";
 	os << std::endl;
 	return os;
 }
@@ -54,26 +55,38 @@ Activity* Task::schedule()
 
 void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize) {
 
-	// For each dependent activity a_next
-	for (auto const &dep : a.dependent_ops) {
-		Activity& a_next = *(dep.first);
-		int port = dep.second;
+	if (a.is_endpoint) {
+		// Copy the result in the provided buffer
+		*(a.final_res) = malloc(retsize);
+		std::memcpy(*(a.final_res), retvalue, retsize);
+	} else {
+		// For each dependent activity a_next
+		for (auto const &dep : a.dependent_ops) {
+			Activity& a_next = *(dep.first);
+			int port = dep.second;
 
-		// Funnel the return value into the parameter list of a_next, in the appropriate port
-		if (port > 0) {
-			assert(a_next.params[port].first && "Attempt to write in a non-allocated port");
-			if (retsize) {
-				a_next.params[port].second = malloc(retsize);
-				std::memcpy(a_next.params[port].second, retvalue, retsize);
-			} else
-				a_next.params[port].second = nullptr;
+			// Funnel the return value into the parameter list of a_next, in the appropriate port
+			if (port > 0) {
+				assert(a_next.params[port].first && "Attempt to write in a non-allocated port");
+				if (retsize) {
+					a_next.params[port].second = malloc(retsize);
+					std::memcpy(a_next.params[port].second, retvalue, retsize);
+				} else
+					a_next.params[port].second = nullptr;
+			}
+			// Resolve dependency for successor activities. If 0 left, put the activity in the ready queue.
+			if (--a_next.n_unresolved == 0)
+				ready_q.emplace(std::make_pair(&a_next, a_next.dependent_ops.size()));
 		}
-		// Resolve dependency for successor activities. If 0 left, put the activity in the ready queue.
-		if (--a_next.n_unresolved == 0)
-			ready_q.emplace(std::make_pair(&a_next, a_next.dependent_ops.size()));
 	}
 
-	// Deallocate result (if needed)
+	// Deallocate actual arguments
+	for (auto &arg : a.params) {
+		if (arg.first && arg.second)
+			free(arg.second);
+	}
+
+	// Deallocate result buffer
 	if (retsize)
 		free(retvalue);
 }
@@ -108,7 +121,7 @@ void Task::run_activity(Activity& a) {
 /* Utility function for Task::is_DAG(). Runs DFS starting from the specified node.
 *  Returns true if it encounters a GREY node, false otherwise.
 */
-bool Task::DFS_traverse(Activity& a)
+bool Task::DFS_traverse(Activity& a) const
 {
 	// Mark GREY the activity node
 	a.col = Color::GREY; 
@@ -136,7 +149,7 @@ bool Task::DFS_traverse(Activity& a)
 /* Checks if the activities belonging to a task are arranged as a DAG (Directed Acyclic Graph).
 *  Returns true if so, false otherwise.
 */
-bool Task::is_DAG()
+bool Task::is_DAG() const
 {
 	// Initialize colors to WHITE
 	for (auto &a : activities)
@@ -153,30 +166,45 @@ bool Task::is_DAG()
 }
 
 
-Task::Task() {}
+Task::Task(void*& res) :
+	has_endpoint(false),
+	result(&res)
+{}
 
 
-Task::~Task() {}
+Task::~Task()
+{}
 
 
 void Task::add_activity(Activity& a)
 {
+	assert(!(a.is_endpoint && this->has_endpoint) && "Task can't have multiple endpoints!");
+
+	if (a.is_endpoint) {
+		a.final_res = result;
+		this->has_endpoint = true;
+	}
+
 	activities.emplace_back(&a);
 }
 
 
 int Task::add_dependency(Activity& a_src, Activity& a_dst)
 {
-	// Make sure the activities belong to the task
+	// TODO: Make sure the activities belong to the task
 	//	return -1;
 
 	// Make sure src and dst are different activities
 	if (&a_src == &a_dst)
 		return -2;
 
-	// TODO: Make sure the dependency (src->dst) doesn't already exist
-	if (a_src.dependent_ops.find(&a_dst) != a_src.dependent_ops.end())
+	// The src activity shall not be the final one
+	if (a_src.is_endpoint)
 		return -3;
+
+	// Make sure the dependency (src->dst) doesn't already exist
+	if (a_src.dependent_ops.find(&a_dst) != a_src.dependent_ops.end())
+		return -4;
 
 	// Notify the first activity node about the dependency (without specifying ret port for now)
 	a_src.dependent_ops[&a_dst] = -1;
@@ -206,7 +234,6 @@ int Task::link_ret_to_arg(Activity& a_src, Activity& a_dst, unsigned port)
 	a_src.dependent_ops[&a_dst] = port;
 	a_dst.params[port].first = true;
 
-	std::cout << "Bound return to argument" << std::endl;
 	return 0;
 }
 
@@ -217,6 +244,7 @@ std::ostream& operator<<(std::ostream& os, const Task& t) {
 	for (auto const &a : t.activities) {
 		os << *a << std::endl;
 	}
+	std::cout << "Is Directed Acyclic Graph: " << (t.is_DAG() ? "yes" : "no") << std::endl;
 	os << "============" << std::endl;
 	return os;
 }
