@@ -79,6 +79,7 @@ void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize) {
 }
 
 
+
 /* Execute the specified activity */
 void Task::run_activity(Activity& a) {
 
@@ -103,6 +104,10 @@ void Task::run_activity(Activity& a) {
 }
 
 
+
+/* Utility function for Task::is_DAG(). Runs DFS starting from the specified node.
+*  Returns true if it encounters a GREY node, false otherwise.
+*/
 bool Task::DFS_traverse(Activity& a)
 {
 	// Mark GREY the activity node
@@ -114,20 +119,23 @@ bool Task::DFS_traverse(Activity& a)
 
 		// If it is GREY, cycle has been spotted
 		if (suc.col == Color::GREY)
-			return false;
+			return true;
 
 		// If white, propagate the DFS
 		if (suc.col == Color::WHITE && DFS_traverse(suc))
-	 		return false;
+	 		return true;
 	}
 
     // Mark this vertex as processed eventually
 	a.col = Color::BLACK; 
-	std::cout << "activity " << a.id << " is black" << std::endl;
-	return true; 
+	return false; 
 }
 
 
+
+/* Checks if the activities belonging to a task are arranged as a DAG (Directed Acyclic Graph).
+*  Returns true if so, false otherwise.
+*/
 bool Task::is_DAG()
 {
 	// Initialize colors to WHITE
@@ -136,7 +144,6 @@ bool Task::is_DAG()
   
 	// For each vertex, DFS traverse
 	for (auto &a : activities) {
-		std::cout << "inspecting activity " << a->id << std::endl;
 		if (a->col == Color::WHITE)
 			if (DFS_traverse(*a))
 				return false;
