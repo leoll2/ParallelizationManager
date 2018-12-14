@@ -52,35 +52,54 @@ Activity* Task::schedule()
 }
 
 
-void Task::complete_activity(Activity& a, void *retvalue) {
+void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize) {
 
+	// For each dependent activity a_next
 	for (auto const &dep : a.dependent_ops) {
 		Activity& a_next = *(dep.first);
 		int port = dep.second;
 
-		// Funnel the return value into the parameter list of the successor (if configured)
-		if (port >= 0) {
+		// Funnel the return value into the parameter list of a_next, in the appropriate port
+		if (port > 0) {
 			assert(a_next.params[port].first && "Attempt to write in a non-allocated port");
-			a_next.params[port].second = retvalue;
+			if (retsize) {
+				a_next.params[port].second = malloc(retsize);
+				std::memcpy(a_next.params[port].second, retvalue, retsize);
+			} else
+				a_next.params[port].second = nullptr;
 		}
 		// Resolve dependency for successor activities. If 0 left, put the activity in the ready queue.
 		if (--a_next.n_unresolved == 0)
 			ready_q.emplace(std::make_pair(&a_next, a_next.dependent_ops.size()));
 	}
+
+	// Deallocate result (if needed)
+	if (retsize)
+		free(retvalue);
 }
 
+
+/* Execute the specified activity */
 void Task::run_activity(Activity& a) {
 
-	std::cout << "Executing activity #" << a.id << std::endl;
+	void *retbuf;		// buffer to store the result
+	unsigned retsize;	// length of the buffer
+
+	D(std::cout << "Executing activity #" << a.id << std::endl;)
+
+	// Set up the actual arguments
 	std::vector<void *> args;
 	args.reserve(a.params.size());
 	for (auto const &arg : a.params)
 		args.push_back(arg.second);
 
-	a(args);			// NUOVO CODICE
+	// Run the activity specific code
+	retsize = a(args, &retbuf);
 
-	void *ret = NULL;	// TODO: DA IMPLEMENTARE
-	complete_activity(a, ret);
+	D(std::cout << "Activity #" << a.id << " returned " << retsize << " bytes " << std::endl;)
+
+	// Postprocessing of the result and cleanup actions
+	complete_activity(a, retbuf, retsize);
 }
 
 
@@ -98,14 +117,14 @@ bool Task::DFS_traverse(Activity& a)
 			return false;
 
 		// If white, propagate the DFS
-    	if (suc.col == Color::WHITE && DFS_traverse(suc))
-    		return false;
+		if (suc.col == Color::WHITE && DFS_traverse(suc))
+	 		return false;
 	}
 
     // Mark this vertex as processed eventually
-    a.col = Color::BLACK; 
-  
-    return true; 
+	a.col = Color::BLACK; 
+	std::cout << "activity " << a.id << " is black" << std::endl;
+	return true; 
 }
 
 
@@ -117,6 +136,7 @@ bool Task::is_DAG()
   
 	// For each vertex, DFS traverse
 	for (auto &a : activities) {
+		std::cout << "inspecting activity " << a->id << std::endl;
 		if (a->col == Color::WHITE)
 			if (DFS_traverse(*a))
 				return false;

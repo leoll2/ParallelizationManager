@@ -2,6 +2,8 @@
 #define _MANAGER_HPP
 
 #include <algorithm>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -10,14 +12,31 @@
 #include <vector>
 
 
+#ifdef DEBUG 
+#define D(x) x
+#else 
+#define D(x)
+#endif
+
+#define NO_RETURN() \
+	*_retbuf = nullptr; \
+	return 0;
+
+#define RETURN(arg) \
+	unsigned _retsize = sizeof arg; \
+	*_retbuf = malloc(_retsize); \
+	std::memcpy(*_retbuf, (void*)&arg, _retsize); \
+	return _retsize;
+
+
 /* Handy macro to specify activity code in a compact fashion. */
 #define ACTIVITY(name) \
     class name : public Activity { \
 		public: \
 			name(void *direct_arg) : Activity(direct_arg) {} \
-			virtual unsigned operator() (const std::vector<void*>& arg); \
+			virtual unsigned operator() (const std::vector<void*>& args, void **_retbuf); \
     }; \
-    unsigned name::operator() (const std::vector<void*>& arg)
+    unsigned name::operator() (const std::vector<void*>& args, void **_retbuf)
 
 
 
@@ -44,7 +63,7 @@ class Activity
 		Activity(void *direct_arg);
 		~Activity();
 
-		virtual unsigned operator() (const std::vector<void *>& arg) = 0;
+		virtual unsigned operator() (const std::vector<void *>& args, void **_retbuf) = 0;
 
 		friend std::ostream& operator<<(std::ostream& os, const Activity& a);
 		friend class Task;
@@ -70,7 +89,7 @@ class Task
 														 (operation, priority) */
 		void init_ready_q();
 		Activity* schedule();
-		void complete_activity(Activity& a, void *retvalue);
+		void complete_activity(Activity& a, void *retvalue, unsigned retsize);
 		bool DFS_traverse(Activity& a);
 
 		void run_activity(Activity& a);

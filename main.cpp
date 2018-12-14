@@ -6,20 +6,25 @@
 ACTIVITY(A_Activity)
 {
 	std::cout << "I'm A_Activity" << std::endl;
-	return 8;
+	int a = 14;
+
+	RETURN(a)
+	//NO_RETURN()
 }
 
 
 ACTIVITY(B_Activity)
 {
 	std::cout << "I'm B_Activity" << std::endl;
-	return 8;
+	
+	NO_RETURN()
 }
 
 ACTIVITY(C_Activity)
 {
 	std::cout << "I'm C_Activity" << std::endl;
-	return 8;
+	
+	NO_RETURN()
 }
 
 
@@ -53,7 +58,7 @@ int main() {
 
 
 	std::cout << t << std::endl;
-	std::cout << (t.is_DAG() ? "DAG" : "not DAG") << std::endl;
+	std::cout << "Checking if the task is Directed Acyclic Graph: " << (t.is_DAG() ? "yes" : "no") << std::endl;
 
 	m.add_task(t);
 	m.run_task();

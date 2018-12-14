@@ -1,5 +1,6 @@
 CC = g++
-CFLAGS = -Wall 
+CFLAGS = -Wall
+DEBUG = -DDEBUG
 
 
 .PHONY: all clean
@@ -11,10 +12,10 @@ all: main
 ################
 
 main.o: main.cpp
-	$(CC) $(CFLAGS) -c main.cpp -o main.o
+	$(CC) $(CFLAGS) $(DEBUG) -c main.cpp -o main.o
 
 manager.o: manager.cpp
-	$(CC) $(CFLAGS) -c manager.cpp -o manager.o
+	$(CC) $(CFLAGS) $(DEBUG) -c manager.cpp -o manager.o
 
 
 ################
