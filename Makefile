@@ -2,6 +2,8 @@ CC = g++
 CFLAGS = -Wall
 #DEBUG = -DDEBUG
 DEBUG = 
+SRC = src
+BUILD = build
 
 .PHONY: all clean
 
@@ -11,20 +13,26 @@ all: main
 # Object files #
 ################
 
-main.o: main.cpp
-	$(CC) $(CFLAGS) $(DEBUG) -c main.cpp -o main.o
+$(BUILD)/activity.o: $(SRC)/activity.cpp
+	$(CC) $(CFLAGS) $(DEBUG) -c $(SRC)/activity.cpp -o $(BUILD)/activity.o
 
-manager.o: manager.cpp
-	$(CC) $(CFLAGS) $(DEBUG) -c manager.cpp -o manager.o
+$(BUILD)/main.o: $(SRC)/main.cpp
+	$(CC) $(CFLAGS) $(DEBUG) -c $(SRC)/main.cpp -o $(BUILD)/main.o
+
+$(BUILD)/parallelizer.o: $(SRC)/parallelizer.cpp
+	$(CC) $(CFLAGS) $(DEBUG) -c $(SRC)/parallelizer.cpp -o $(BUILD)/parallelizer.o
+
+$(BUILD)/task.o: $(SRC)/task.cpp
+	$(CC) $(CFLAGS) $(DEBUG) -c $(SRC)/task.cpp -o $(BUILD)/task.o
 
 
 ################
 # Executables  #
 ################
 
-main: main.o manager.o
-	$(CC) main.o manager.o -o main
+main: $(BUILD)/main.o $(BUILD)/parallelizer.o $(BUILD)/activity.o $(BUILD)/task.o
+	$(CC) $(BUILD)/main.o $(BUILD)/parallelizer.o $(BUILD)/activity.o $(BUILD)/task.o -o main
 
 
 clean:
-	rm *.o main
+	rm -f $(BUILD)/*.o main

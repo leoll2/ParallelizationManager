@@ -1,35 +1,13 @@
+#include <algorithm>
 #include <cassert>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+#include <memory>
+#include <queue>
 
-#include "manager.hpp"
-
-int Activity::ID_gen = 0;
-
-Activity::Activity(void *direct_arg, bool endp) :
-	id(ID_gen++),
-	n_unresolved(0),
-	is_endpoint(endp)
-{
-	params.emplace_back(std::make_pair(true, direct_arg));
-}
-
-
-Activity::~Activity() {}
-
-
-std::ostream& operator<<(std::ostream& os, const Activity& a) {
-
-	os << "Activity #" << a.id << std::endl;
-	os << "Parameters: ";
-	for (auto const &arg : a.params)
-		os << (arg.first ? "1 " : "0 ");
-	os << std::endl;
-	os << "# of unresolved dependencies " << a.n_unresolved << std::endl;
-	os << "Dependent ops: ";
-	for (auto const &dep : a.dependent_ops)
-		os << "(" << (*(dep.first)).id << " [" << dep.second << "])";
-	os << std::endl;
-	return os;
-}
+#include "debug.hpp"
+#include "task.hpp"
 
 
 void Task::init_ready_q()
@@ -247,41 +225,4 @@ std::ostream& operator<<(std::ostream& os, const Task& t) {
 	std::cout << "Is Directed Acyclic Graph: " << (t.is_DAG() ? "yes" : "no") << std::endl;
 	os << "============" << std::endl;
 	return os;
-}
-
-
-
-Manager::Manager(unsigned pool_size) : 
-	task(nullptr),
-	n_threads(pool_size)
-{
-
-	/* TODO: allocate a pool of threads*/
-}
-
-
-Manager::~Manager()
-{
-
-	/* TODO: kill threads of the pool */
-}
-
-
-void Manager::add_task(Task& t)
-{
-
-	task = &t;
-}
-
-
-void* Manager::run_task()
-{
-	task->init_ready_q();
-
-	Activity *current;
-	while ((current = task->schedule())) {
-		task->run_activity(*current);
-	}
-
-	return nullptr;
 }

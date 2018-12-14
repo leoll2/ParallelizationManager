@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "manager.hpp"
+#include "parallelizer.hpp"
 
 
 ACTIVITY(A_Activity)
