@@ -2,6 +2,7 @@ CC = g++
 CFLAGS = -Wall
 #DEBUG = -DDEBUG
 DEBUG = 
+PTHREAD = -lpthread
 SRC = src
 BUILD = build
 
@@ -31,7 +32,7 @@ $(BUILD)/task.o: $(SRC)/task.cpp
 ################
 
 main: $(BUILD)/main.o $(BUILD)/parallelizer.o $(BUILD)/activity.o $(BUILD)/task.o
-	$(CC) $(BUILD)/main.o $(BUILD)/parallelizer.o $(BUILD)/activity.o $(BUILD)/task.o -o main
+	$(CC) $(PTHREAD) $(BUILD)/main.o $(BUILD)/parallelizer.o $(BUILD)/activity.o $(BUILD)/task.o -o main
 
 
 clean:

@@ -4,7 +4,6 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
-#include <queue>
 
 #include "debug.hpp"
 #include "task.hpp"
@@ -37,6 +36,8 @@ void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize) {
 		// Copy the result in the provided buffer
 		*(a.final_res) = malloc(retsize);
 		std::memcpy(*(a.final_res), retvalue, retsize);
+
+		completed = true;
 	} else {
 		// For each dependent activity a_next
 		for (auto const &dep : a.dependent_ops) {
@@ -146,6 +147,7 @@ bool Task::is_DAG() const
 
 Task::Task(void*& res) :
 	has_endpoint(false),
+	completed(false),
 	result(&res)
 {}
 
@@ -157,6 +159,9 @@ Task::~Task()
 void Task::add_activity(Activity& a)
 {
 	assert(!(a.is_endpoint && this->has_endpoint) && "Task can't have multiple endpoints!");
+	//assert(!a.owner && "Activity can't belong to multiple tasks!");
+
+	//a->owner = this;
 
 	if (a.is_endpoint) {
 		a.final_res = result;

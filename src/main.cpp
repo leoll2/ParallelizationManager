@@ -56,7 +56,7 @@ int main() {
 	void *ret;
 	int result;
 
-	Manager m(8);
+	PManager m(8);
 
 	Task t(ret);
 
@@ -88,7 +88,7 @@ int main() {
 	std::cout << t << std::endl;
 
 	m.add_task(t);
-	m.run_task();
+	m.run();
 
 	RETRIEVE_RESULT(result, ret, int);
 

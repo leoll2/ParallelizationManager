@@ -2,10 +2,12 @@
 #define _ACTIVITY_HPP
 
 #include <cstdlib>
+#include <cstring>
 #include <map>
 #include <memory>
 #include <utility>
 #include <vector>
+
 
 //////////////////////////////////////////////////////////////////////////
 //																		//
@@ -62,6 +64,7 @@ class Activity
 	private:
 		static int ID_gen;				///< ID generator
 		int id;							///< ID (for debug purposes only)
+		//Task *owner;					///< task owning this activity
 		std::vector<std::pair<bool, void*> > params; 	/**< routine arguments.
 															 The first is passed directly, others come from dep results
 															 (port allocated, pointer to arg) */

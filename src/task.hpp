@@ -1,6 +1,7 @@
 #ifndef _TASK_HPP
 #define _TASK_HPP
 
+#include <queue>
 #include <utility>
 #include <vector>
 
@@ -15,13 +16,13 @@ class Task
 													/**< ops ready to execute (all deps satisfied)
 														 (operation, priority) */
 		bool has_endpoint;							///< used to verify that there's one and only one endpoint activity
+		bool completed;								///< true when all the activities are finished
 		void **result;								///< pointer to buffer to store the final result of the task
 
 		void init_ready_q();
 		Activity* schedule();
 		void complete_activity(Activity& a, void *retvalue, unsigned retsize);
 		bool DFS_traverse(Activity& a) const;
-
 		void run_activity(Activity& a);
 
 	public:
@@ -32,7 +33,7 @@ class Task
 		int link_ret_to_arg(Activity& a_src, Activity& a_dst, unsigned port);
 		bool is_DAG() const;
 		friend std::ostream& operator<<(std::ostream& os, const Task& t);
-		friend class Manager;
+		friend class PManager;
 };
 
 
