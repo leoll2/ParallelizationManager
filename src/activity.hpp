@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 
+#include "task.hpp"
 
 //////////////////////////////////////////////////////////////////////////
 //																		//
@@ -53,6 +54,8 @@ enum class Color {WHITE, GREY, BLACK};	/**< used for DAG verification:
 											 BLACK: node explored and all its descendants */
 
 
+class Task;
+
 //////////////////////////////////////////////////////////////////////////
 //																		//
 //	Class ACTIVITY describes an operation that is part of a larger task //
@@ -64,7 +67,7 @@ class Activity
 	private:
 		static int ID_gen;				///< ID generator
 		int id;							///< ID (for debug purposes only)
-		//Task *owner;					///< task owning this activity
+		Task *owner;					///< task owning this activity
 		std::vector<std::pair<bool, void*> > params; 	/**< routine arguments.
 															 The first is passed directly, others come from dep results
 															 (port allocated, pointer to arg) */
@@ -75,20 +78,13 @@ class Activity
 		void ** final_res;				///< if final task, pointer to buffer to store the result
 		Color col;						///< used for DAG verification
 
-	public:
+	public:	
 		Activity(void *direct_arg, bool endpoint = false);
 		~Activity();
 		virtual unsigned operator() (const std::vector<void *>& args, void **_retbuf) = 0;
 		friend std::ostream& operator<<(std::ostream& os, const Activity& a);
 		friend class Task;
-};
-
-class ComparePrio
-{
-public:
-    bool operator()(std::pair<Activity*, int> p1, std::pair<Activity*, int> p2) {
-        return p1.second > p2.second;
-    }
+		friend class PManager;
 };
 
 #endif

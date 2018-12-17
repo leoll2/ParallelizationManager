@@ -9,6 +9,11 @@
 #include "task.hpp"
 
 
+bool ActivityPrioCompare::operator()(std::pair<Activity*, int> p1, std::pair<Activity*, int> p2) {
+    return p1.second > p2.second;
+}
+
+
 void Task::init_ready_q()
 {
 	for (auto const &a : activities) {
@@ -159,9 +164,9 @@ Task::~Task()
 void Task::add_activity(Activity& a)
 {
 	assert(!(a.is_endpoint && this->has_endpoint) && "Task can't have multiple endpoints!");
-	//assert(!a.owner && "Activity can't belong to multiple tasks!");
+	assert(!a.owner && "Activity can't belong to multiple tasks!");
 
-	//a->owner = this;
+	a.owner = this;
 
 	if (a.is_endpoint) {
 		a.final_res = result;
@@ -174,8 +179,9 @@ void Task::add_activity(Activity& a)
 
 int Task::add_dependency(Activity& a_src, Activity& a_dst)
 {
-	// TODO: Make sure the activities belong to the task
-	//	return -1;
+	// Make sure the activities belong to the task
+	if (a_src.owner != this || a_dst.owner != this)
+		return -1;
 
 	// Make sure src and dst are different activities
 	if (&a_src == &a_dst)

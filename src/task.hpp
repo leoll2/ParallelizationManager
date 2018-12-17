@@ -7,12 +7,21 @@
 
 #include "activity.hpp"
 
+class Activity;
+
+class ActivityPrioCompare
+{
+	public:
+	    bool operator()(std::pair<Activity*, int> p1, std::pair<Activity*, int> p2);
+};
+
+
 class Task
 {
 	private:
 
 		std::vector<Activity*> activities;			///< all the activities of the task
-		std::priority_queue<std::pair<Activity*, int>, std::vector<std::pair<Activity*, int>>, ComparePrio> ready_q;	
+		std::priority_queue<std::pair<Activity*, int>, std::vector<std::pair<Activity*, int>>, ActivityPrioCompare> ready_q;	
 													/**< ops ready to execute (all deps satisfied)
 														 (operation, priority) */
 		bool has_endpoint;							///< used to verify that there's one and only one endpoint activity

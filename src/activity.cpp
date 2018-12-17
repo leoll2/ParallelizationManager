@@ -8,6 +8,7 @@ int Activity::ID_gen = 0;
 
 Activity::Activity(void *direct_arg, bool endp) :
 	id(ID_gen++),
+	owner(nullptr),
 	n_unresolved(0),
 	is_endpoint(endp)
 {
