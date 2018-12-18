@@ -1,6 +1,11 @@
 # ParallelizationManager
 ParallelizationManager helps you writing parallelizable programs and execute their operations on multiple threads concurrently. In other words, ParallelizationManager is a thread pool scheduler for parallelizable tasks whose dependencies can be modeled as a Directed Acyclic Graph (DAG).
 
+## Table of Contents
+- [Obtain](#obtain)
+- [Usage](#usage)
+  - [Activity](#activity)
+
 ## Obtain
 
 Download with:
