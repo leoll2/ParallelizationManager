@@ -1,3 +1,4 @@
+#include <cassert>
 #include <iostream>
 
 #include "parallelizer.hpp" 
@@ -97,6 +98,8 @@ int main() {
 	RETRIEVE_RESULT(result, ret, int);
 
 	std::cout << "Final result: " << result << std::endl;
+
+	assert((result == 38) && "Wrong result!");
 
 	return 0;
 }

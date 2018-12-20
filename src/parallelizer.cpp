@@ -13,27 +13,25 @@
 
 std::atomic_int PManager::Worker::ID_gen = ATOMIC_VAR_INIT(0);
 
-/* Routine of a worker: wait to be requested by manager, then execute the  */
+/* Routine of a worker: wait to be requested by the manager, then execute the appropriate function */
 void PManager::Worker::routine()
 {
 	while(true) {
-		std::unique_lock<std::mutex> lock(ready_mtx);
 
-		// Wait for manager to put something in cur_act and give authorization to run (signaling)
-		ready_to_go.wait(lock);		// this is also signaled when shutting down the worker
-		// If the worker is asked to stop, this is the safest moment (no activity in progress)
-		if (should_stop)
-			break;
+		// Wait for manager to put something in cur_act, but periodically check if should stop!
+		while (!data_avail.wait_limited(std::chrono::milliseconds(100))) {
+    		// If the worker is asked to stop, this is the safest moment (no activity in progress)
+			if (should_stop)
+				return;
+  		}
 
-		std::cout << "worker " << id << " got task " << cur_act->id << std::endl;	//DEBUG
-		D(std::cout << "I'm the worker #" << id << std::endl;)
 		// Execute the code of the activity (here is the core of the routine)
 		cur_task->run_activity(*cur_act);
 
-		std::cout << "worker " << id << " finished run_activity " << std::endl;
+		D(std::cout << "Worker " << id << " finished activity " << cur_act->id << std::endl);
 
 		// After finishing, notify the master about the worker being available again
-		master->employable_worker(this);
+		master->free_worker(this);
 	}
 }
 
@@ -44,10 +42,11 @@ PManager::Worker::Worker(PManager *owner) :
 	cur_task(nullptr),
 	master(owner),
 	id(ID_gen++),
-	should_stop(ATOMIC_VAR_INIT(false))
+	should_stop(ATOMIC_VAR_INIT(false)),
+	data_avail(0)
 {
 	thread = new std::thread(&PManager::Worker::routine, this);
-	master->employable_worker(this);	// worker is initialized as available
+	master->free_worker(this);	// worker is initialized as available
 }
 
 
@@ -80,10 +79,8 @@ PManager::PManager(unsigned pool_size) :
 PManager::~PManager()
 {
 	// Signal workers to stop asap
-	for (auto& w : pool) {
+	for (auto& w : pool)
 		w->should_stop = true;
-		w->ready_to_go.notify_one();
-	}
 
 	// Join the workers, then deallocate them
 	for (auto& w : pool) {
@@ -111,29 +108,23 @@ bool PManager::any_worker_available()
 /* Pick a worker among the set of available ones */
 PManager::Worker* PManager::hire_worker()
 {
-	std::unique_lock<std::mutex> lock(worker_avail_mtx);
+	std::unique_lock<std::mutex> lock(avail_workers_mtx);
 
-	std::cout << "================" << std::endl; //DEBUG
-	/*std::cout << "Avail workers: [";		//DEBUG
-	for (auto const& aw : avail_workers)	//DEBUG
-		std::cout << aw->id << " ";			//DEBUG
-	std::cout << "]" << std::endl;			//DEBUG*/
-	worker_avail.wait(lock, std::bind(&PManager::any_worker_available, this));
+	while(avail_workers.empty())
+		worker_avail.wait(lock);
+
 	Worker *wp = *avail_workers.begin();	// first elem of the set
 	avail_workers.erase(avail_workers.begin());
-	/*std::cout << "Chosen worker " << wp->id << std::endl;	//DEBUG
-	std::cout << "Avail workers: [";		//DEBUG
-	for (auto const& aw : avail_workers)	//DEBUG
-		std::cout << aw->id << " ";			//DEBUG
-	std::cout << "]" << std::endl;			//DEBUG*/
+
 	return wp;	
 }
 
 
 /* Put a worker in the set of available ones */
-void PManager::employable_worker(Worker *w)
+void PManager::free_worker(Worker *w)
 {
-	std::unique_lock<std::mutex> lock(worker_avail_mtx);
+	std::unique_lock<std::mutex> lock(avail_workers_mtx);
+
 	avail_workers.insert(w);
 	worker_avail.notify_one();
 }
@@ -143,8 +134,7 @@ void PManager::employable_worker(Worker *w)
 *  Consider tasks in FIFO order: if the first task has any activity ready for execution
 *  (i.e. all dependencies are satisfied), then choose one of those; otherwise, move to
 *  the next task and do the same, and so on. If no activity is ready for execution yet,
-*  likely because dependencies are currently being solved, simply return nullptr. 
-*/
+*  likely because dependencies are currently being solved, simply return nullptr. */
 Activity* PManager::schedule_activity() {
 
 	Activity *scheduled_act;
@@ -172,8 +162,7 @@ Activity* PManager::schedule_activity() {
 
 
 /* Routine of the manager. After initializing the ready queues of each task, 
-*  loop through all activities until all jobs are completed.
-*/
+*  loop through all activities until all jobs are completed. */
 void PManager::run()
 {
 	Activity *scheduled_act;
@@ -188,16 +177,16 @@ void PManager::run()
 		scheduled_act = schedule_activity();
 		// If any is available, find a worker to which the activity ought to be assigned
 		if (scheduled_act) {
+
 			Worker *w = hire_worker();
 			w->cur_act = scheduled_act;
 			w->cur_task = scheduled_act->owner;
-			w->ready_to_go.notify_one();
-			std::cout << "Activity " << scheduled_act->id << " assigned to worker " << w->id << std::endl;
+			w->data_avail.signal();
+
+			D(std::cout << "Activity " << scheduled_act->id << " assigned to worker " << w->id << std::endl);
 		} else {  // otherwise, if no activity available, wait for one to become available
 			// TODO
-			//std::cout << runqueue.size() << std::endl;
-			//std::cout << "Waiting for activities to finish..." << std::endl;
-			//std::this_thread::sleep_for (std::chrono::seconds(1));	// TODO: replace with better solution
+			
 		}
 	}
 }

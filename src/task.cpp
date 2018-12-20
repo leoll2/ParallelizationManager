@@ -14,6 +14,8 @@ bool ActivityPrioCompare::operator()(std::pair<Activity*, int> p1, std::pair<Act
 }
 
 
+/* Initialize the ready queue of the task, inserting those activities which 
+*  don't have dependencies at all, */
 void Task::init_ready_q()
 {
 	std::unique_lock<std::mutex> lock(ready_q_mtx);
@@ -27,6 +29,8 @@ void Task::init_ready_q()
 }
 
 
+/* Extract from the ready queue the first schedulable activity, if any. 
+*  If none is available, return nullptr. */
 Activity* Task::schedule()
 {
 	std::unique_lock<std::mutex> lock(ready_q_mtx);
@@ -39,8 +43,8 @@ Activity* Task::schedule()
 }
 
 
-void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize) {
-
+void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize) 
+{
 	std::unique_lock<std::mutex> lock(ready_q_mtx);
 
 	if (a.is_endpoint) {
@@ -48,7 +52,7 @@ void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize) {
 		*(a.final_res) = malloc(retsize);
 		std::memcpy(*(a.final_res), retvalue, retsize);
 
-		completed = true;
+		completed = true;	// from now the final result is consistent and readable by external entities
 	} else {
 		// For each dependent activity a_next
 		for (auto const &dep : a.dependent_ops) {
@@ -78,7 +82,7 @@ void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize) {
 			free(arg.second);
 	}
 
-	// Deallocate result buffer
+	// Deallocate result temporary buffer
 	if (retsize)
 		free(retvalue);
 }
@@ -94,7 +98,7 @@ void Task::run_activity(Activity& a) {
 	D(std::cout << "Executing activity #" << a.id << std::endl;)
 
 	// Set up the actual arguments
-	std::vector<void *> args;
+	std::vector<void*> args;
 	args.reserve(a.params.size());
 	for (auto const &arg : a.params)
 		args.push_back(arg.second);

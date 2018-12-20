@@ -20,7 +20,6 @@ class ActivityPrioCompare
 class Task
 {
 	private:
-
 		std::vector<Activity*> activities;			// all the activities of the task
 		std::priority_queue<std::pair<Activity*, int>, std::vector<std::pair<Activity*, int>>, ActivityPrioCompare> ready_q;	
 													/* operations ready to execute (all deps satisfied)

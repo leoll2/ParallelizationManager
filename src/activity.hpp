@@ -1,6 +1,7 @@
 #ifndef _ACTIVITY_HPP
 #define _ACTIVITY_HPP
 
+#include <atomic>
 #include <cstdlib>
 #include <cstring>
 #include <map>
@@ -73,9 +74,9 @@ class Activity
 															 (port allocated, pointer to arg) */
 		std::map<Activity*, int> dependent_ops;			/**< activities directly depending on this
 															 (operation, ret value port) */
-		int n_unresolved;				///< no. of yet unresolved dependencies (updated during execution)
+		std::atomic_int n_unresolved;	///< no. of yet unresolved dependencies (updated during execution)
 		bool is_endpoint;				///< is it the final task?
-		void ** final_res;				///< if final task, pointer to buffer to store the result
+		void **final_res;				///< if final task, pointer to buffer to store the result
 		Color col;						///< used for DAG verification
 
 	public:	
