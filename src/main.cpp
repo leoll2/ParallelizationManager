@@ -1,11 +1,11 @@
 #include <iostream>
 
-#include "parallelizer.hpp"
-
+#include "parallelizer.hpp" 
 
 ACTIVITY(A_Activity)
 {
 	int res = 8;
+	//std::this_thread::sleep_for (std::chrono::seconds(4)); //DEBUG
 
 	RETURN(res)
 }
@@ -16,6 +16,7 @@ ACTIVITY(B_Activity)
 	GET_ARG(a, int, 1)
 
 	int res = a + 5;
+	//std::this_thread::sleep_for (std::chrono::seconds(4)); //DEBUG
 	
 	RETURN(res)
 }
@@ -25,6 +26,7 @@ ACTIVITY(C_Activity)
 	GET_ARG(a, int, 1)
 
 	int res = 2 * a;
+	//std::this_thread::sleep_for (std::chrono::seconds(4)); //DEBUG
 
 	RETURN(res)
 }
@@ -35,6 +37,7 @@ ACTIVITY(D_Activity)
 	GET_ARG(a, int, 1)
 
 	int res = a - 1;
+	//std::this_thread::sleep_for (std::chrono::seconds(4)); //DEBUG
 
 	RETURN(res)
 }
@@ -46,6 +49,7 @@ ACTIVITY(E_Activity)
 	GET_ARG(b, int, 2)
 
 	int res = a + b;
+	//std::this_thread::sleep_for (std::chrono::seconds(4)); //DEBUG
 	
 	RETURN(res)
 }

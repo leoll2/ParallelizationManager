@@ -1,6 +1,7 @@
 #ifndef _TASK_HPP
 #define _TASK_HPP
 
+#include <mutex>
 #include <queue>
 #include <utility>
 #include <vector>
@@ -20,13 +21,14 @@ class Task
 {
 	private:
 
-		std::vector<Activity*> activities;			///< all the activities of the task
+		std::vector<Activity*> activities;			// all the activities of the task
 		std::priority_queue<std::pair<Activity*, int>, std::vector<std::pair<Activity*, int>>, ActivityPrioCompare> ready_q;	
-													/**< ops ready to execute (all deps satisfied)
-														 (operation, priority) */
-		bool has_endpoint;							///< used to verify that there's one and only one endpoint activity
-		bool completed;								///< true when all the activities are finished
-		void **result;								///< pointer to buffer to store the final result of the task
+													/* operations ready to execute (all deps satisfied)
+													   (operation, priority) */
+		std::mutex ready_q_mtx;						// mutex to protect ready_q
+		bool has_endpoint;							// used to verify that there's one and only one endpoint activity
+		bool completed;								// true when all the activities are finished
+		void **result;								// pointer to buffer to store the final result of the task
 
 		void init_ready_q();
 		Activity* schedule();

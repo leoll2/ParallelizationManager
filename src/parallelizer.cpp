@@ -25,9 +25,12 @@ void PManager::Worker::routine()
 		if (should_stop)
 			break;
 
+		std::cout << "worker " << id << " got task " << cur_act->id << std::endl;	//DEBUG
 		D(std::cout << "I'm the worker #" << id << std::endl;)
 		// Execute the code of the activity (here is the core of the routine)
 		cur_task->run_activity(*cur_act);
+
+		std::cout << "worker " << id << " finished run_activity " << std::endl;
 
 		// After finishing, notify the master about the worker being available again
 		master->employable_worker(this);
@@ -109,9 +112,20 @@ bool PManager::any_worker_available()
 PManager::Worker* PManager::hire_worker()
 {
 	std::unique_lock<std::mutex> lock(worker_avail_mtx);
+
+	std::cout << "================" << std::endl; //DEBUG
+	/*std::cout << "Avail workers: [";		//DEBUG
+	for (auto const& aw : avail_workers)	//DEBUG
+		std::cout << aw->id << " ";			//DEBUG
+	std::cout << "]" << std::endl;			//DEBUG*/
 	worker_avail.wait(lock, std::bind(&PManager::any_worker_available, this));
 	Worker *wp = *avail_workers.begin();	// first elem of the set
 	avail_workers.erase(avail_workers.begin());
+	/*std::cout << "Chosen worker " << wp->id << std::endl;	//DEBUG
+	std::cout << "Avail workers: [";		//DEBUG
+	for (auto const& aw : avail_workers)	//DEBUG
+		std::cout << aw->id << " ";			//DEBUG
+	std::cout << "]" << std::endl;			//DEBUG*/
 	return wp;	
 }
 
@@ -181,7 +195,8 @@ void PManager::run()
 			std::cout << "Activity " << scheduled_act->id << " assigned to worker " << w->id << std::endl;
 		} else {  // otherwise, if no activity available, wait for one to become available
 			// TODO
-			D(std::cout << "Waiting for activities to finish..." << std::endl;)
+			//std::cout << runqueue.size() << std::endl;
+			//std::cout << "Waiting for activities to finish..." << std::endl;
 			//std::this_thread::sleep_for (std::chrono::seconds(1));	// TODO: replace with better solution
 		}
 	}

@@ -16,6 +16,8 @@ bool ActivityPrioCompare::operator()(std::pair<Activity*, int> p1, std::pair<Act
 
 void Task::init_ready_q()
 {
+	std::unique_lock<std::mutex> lock(ready_q_mtx);
+
 	for (auto const &a : activities) {
 		if (a->n_unresolved == 0)
 			ready_q.emplace(std::make_pair(a, a->dependent_ops.size()));
@@ -27,6 +29,8 @@ void Task::init_ready_q()
 
 Activity* Task::schedule()
 {
+	std::unique_lock<std::mutex> lock(ready_q_mtx);
+
 	if (ready_q.empty())
 		return nullptr;
 	auto ret = ready_q.top();
@@ -36,6 +40,8 @@ Activity* Task::schedule()
 
 
 void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize) {
+
+	std::unique_lock<std::mutex> lock(ready_q_mtx);
 
 	if (a.is_endpoint) {
 		// Copy the result in the provided buffer
@@ -53,14 +59,16 @@ void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize) {
 			if (port > 0) {
 				assert(a_next.params[port].first && "Attempt to write in a non-allocated port");
 				if (retsize) {
+					//std::cout << "activity " << a.id << "returned with value " << *(int*)retvalue << std::endl;//DEBUG
 					a_next.params[port].second = malloc(retsize);
 					std::memcpy(a_next.params[port].second, retvalue, retsize);
 				} else
 					a_next.params[port].second = nullptr;
 			}
 			// Resolve dependency for successor activities. If 0 left, put the activity in the ready queue.
-			if (--a_next.n_unresolved == 0)
+			if (--a_next.n_unresolved == 0) {
 				ready_q.emplace(std::make_pair(&a_next, a_next.dependent_ops.size()));
+			}
 		}
 	}
 
