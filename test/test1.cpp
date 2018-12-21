@@ -3,14 +3,14 @@
 # Test_1
 #
 # Activities:
-# a = 8
-# b = a + 5
-# c = 2 * b
-# d = b - 1
-# e = c + d
+# a1  = 8
+# a2  = a1 + 5
+# a3  = 2 * a2
+# a4  = a2 - 1
+# a5  = a3 + a4
 #
-# Returned variable:
-# e
+# Returned:
+# a5
 #
 # Expected result:
 # 38
@@ -38,7 +38,7 @@ ACTIVITY(A_Activity)
 
 ACTIVITY(B_Activity)
 {
-	GET_ARG(a, int, 1)
+	DECL_AND_GET_ARG(a, int, 1)
 
 	int res = a + 5;
 	//std::this_thread::sleep_for (std::chrono::seconds(1));
@@ -48,7 +48,7 @@ ACTIVITY(B_Activity)
 
 ACTIVITY(C_Activity)
 {
-	GET_ARG(a, int, 1)
+	DECL_AND_GET_ARG(a, int, 1)
 
 	int res = 2 * a;
 	//std::this_thread::sleep_for (std::chrono::seconds(1));
@@ -59,7 +59,7 @@ ACTIVITY(C_Activity)
 
 ACTIVITY(D_Activity)
 {
-	GET_ARG(a, int, 1)
+	DECL_AND_GET_ARG(a, int, 1)
 
 	int res = a - 1;
 	//std::this_thread::sleep_for (std::chrono::seconds(1));
@@ -70,8 +70,8 @@ ACTIVITY(D_Activity)
 
 ACTIVITY(E_Activity)
 {
-	GET_ARG(a, int, 1)
-	GET_ARG(b, int, 2)
+	DECL_AND_GET_ARG(a, int, 1)
+	DECL_AND_GET_ARG(b, int, 2)
 
 	int res = a + b;
 	//std::this_thread::sleep_for (std::chrono::seconds(1));
@@ -85,7 +85,7 @@ int main() {
 	void *ret;
 	int result;
 
-	PManager m(8);
+	PManager m(4);
 
 	Task t(ret);
 

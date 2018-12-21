@@ -2,82 +2,58 @@
 #
 # Test_2
 #
-# Activities:
-# a = 8
-# b = a + 5
-# c = 2 * b
-# d = b - 1
-# e = c + d
+# Parameters:
+# i = 1..16
+# x[i] = i
 #
-# Returned variable:
-# e
+# Activities:
+# a[i] = x[i]^2
+# a_res = sum_i(a[i])
+#
+# Returned:
+# a_res
 #
 # Expected result:
-# 38
+# 1240
 #
 #############################*/
 
-#define EXPECTED_RES    38
+#define EXPECTED_RES    1496
 
+#include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <numeric>
+#include <vector>
 
 #include "parallelizer.hpp" 
 
+const unsigned N = 16;
 
 
-
-ACTIVITY(A_Activity)
+ACTIVITY(SquareOp)
 {
-	int res = 8;
+    DECL_AND_GET_ARG(x, int, 0)
+    
+	int res = x * x;
 	//std::this_thread::sleep_for (std::chrono::seconds(1));
 
 	RETURN(res)
 }
 
 
-ACTIVITY(B_Activity)
+ACTIVITY(SumOp)
 {
-	GET_ARG(a, int, 1)
+    std::vector<int> squares(N);
+    for (unsigned i = 1; i <= N; ++i)
+	    GET_ARG(squares[i-1], int, i)
 
-	int res = a + 5;
-	//std::this_thread::sleep_for (std::chrono::seconds(1));
-	
-	RETURN(res)
-}
-
-ACTIVITY(C_Activity)
-{
-	GET_ARG(a, int, 1)
-
-	int res = 2 * a;
-	//std::this_thread::sleep_for (std::chrono::seconds(1));
-
-	RETURN(res)
-}
-
-
-ACTIVITY(D_Activity)
-{
-	GET_ARG(a, int, 1)
-
-	int res = a - 1;
-	//std::this_thread::sleep_for (std::chrono::seconds(1));
-
-	RETURN(res)
-}
-
-
-ACTIVITY(E_Activity)
-{
-	GET_ARG(a, int, 1)
-	GET_ARG(b, int, 2)
-
-	int res = a + b;
+	int res = std::accumulate(squares.begin(), squares.end(), 0);
 	//std::this_thread::sleep_for (std::chrono::seconds(1));
 	
 	RETURN(res)
 }
+
 
 
 int main() {
@@ -85,38 +61,28 @@ int main() {
 	void *ret;
 	int result;
 
+    std::vector<int> values(N);
+    std::iota(values.begin(), values.end(), 1);
+
 	PManager m(8);
 
 	Task t(ret);
 
-	A_Activity a1(NULL);
-	B_Activity a2(NULL);
-	C_Activity a3(NULL);
-	D_Activity a4(NULL);
-	E_Activity a5(NULL, true);
+    SumOp sum_op(NULL, true);
+    t.add_activity(sum_op);
 
-	t.add_activity(a1);
-	t.add_activity(a2);
-	t.add_activity(a3);
-	t.add_activity(a4);
-	t.add_activity(a5);
-
-	t.add_dependency(a1, a2);
-	t.add_dependency(a2, a3);
-	t.add_dependency(a2, a4);
-	t.add_dependency(a3, a5);
-	t.add_dependency(a4, a5);
-
-	t.link_ret_to_arg(a1, a2, 1);
-	t.link_ret_to_arg(a2, a3, 1);
-	t.link_ret_to_arg(a2, a4, 1);
-	t.link_ret_to_arg(a3, a5, 1);
-	t.link_ret_to_arg(a4, a5, 2);
-
+    std::vector<SquareOp*> sq_ops(N);
+    for (unsigned i = 0; i < N; ++i) {
+        sq_ops[i] = new SquareOp(&values[i]);
+        t.add_activity(*sq_ops[i]);
+        t.add_dependency(*sq_ops[i], sum_op);
+        t.link_ret_to_arg(*sq_ops[i], sum_op, i+1);
+    }
 
 	D(std::cout << t << std::endl);
 
 	m.add_task(t);
+
 	m.run();
 
 	RETRIEVE_RESULT(result, ret, int);
