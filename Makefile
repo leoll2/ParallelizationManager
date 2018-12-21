@@ -23,6 +23,9 @@ $(BUILD)/main.o: $(SRC)/main.cpp
 $(BUILD)/parallelizer.o: $(SRC)/parallelizer.cpp
 	$(CC) $(CFLAGS) $(DEBUG) -c $(SRC)/parallelizer.cpp -o $(BUILD)/parallelizer.o
 
+$(BUILD)/semaphore.o: $(SRC)/semaphore.cpp
+	$(CC) $(CFLAGS) $(DEBUG) -c $(SRC)/semaphore.cpp -o $(BUILD)/semaphore.o
+
 $(BUILD)/task.o: $(SRC)/task.cpp
 	$(CC) $(CFLAGS) $(DEBUG) -c $(SRC)/task.cpp -o $(BUILD)/task.o
 
@@ -31,8 +34,8 @@ $(BUILD)/task.o: $(SRC)/task.cpp
 # Executables  #
 ################
 
-main: $(BUILD)/main.o $(BUILD)/parallelizer.o $(BUILD)/activity.o $(BUILD)/task.o
-	$(CC) $(PTHREAD) $(BUILD)/main.o $(BUILD)/parallelizer.o $(BUILD)/activity.o $(BUILD)/task.o -o main
+main: $(BUILD)/main.o $(BUILD)/parallelizer.o $(BUILD)/activity.o $(BUILD)/semaphore.o $(BUILD)/task.o
+	$(CC) $(PTHREAD) $(BUILD)/main.o $(BUILD)/parallelizer.o $(BUILD)/activity.o $(BUILD)/semaphore.o $(BUILD)/task.o -o main
 
 
 clean:

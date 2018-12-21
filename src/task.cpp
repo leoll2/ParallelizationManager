@@ -14,8 +14,12 @@ bool ActivityPrioCompare::operator()(std::pair<Activity*, int> p1, std::pair<Act
 }
 
 
+/* Initialize the ready queue of the task, inserting those activities which 
+*  don't have dependencies at all, */
 void Task::init_ready_q()
 {
+	std::unique_lock<std::mutex> lock(ready_q_mtx);
+
 	for (auto const &a : activities) {
 		if (a->n_unresolved == 0)
 			ready_q.emplace(std::make_pair(a, a->dependent_ops.size()));
@@ -25,8 +29,12 @@ void Task::init_ready_q()
 }
 
 
+/* Extract from the ready queue the first schedulable activity, if any. 
+*  If none is available, return nullptr. */
 Activity* Task::schedule()
 {
+	std::unique_lock<std::mutex> lock(ready_q_mtx);
+
 	if (ready_q.empty())
 		return nullptr;
 	auto ret = ready_q.top();
@@ -35,14 +43,16 @@ Activity* Task::schedule()
 }
 
 
-void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize) {
+void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize) 
+{
+	std::unique_lock<std::mutex> lock(ready_q_mtx);
 
 	if (a.is_endpoint) {
 		// Copy the result in the provided buffer
 		*(a.final_res) = malloc(retsize);
 		std::memcpy(*(a.final_res), retvalue, retsize);
 
-		completed = true;
+		completed = true;	// from now the final result is consistent and readable by external entities
 	} else {
 		// For each dependent activity a_next
 		for (auto const &dep : a.dependent_ops) {
@@ -53,14 +63,16 @@ void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize) {
 			if (port > 0) {
 				assert(a_next.params[port].first && "Attempt to write in a non-allocated port");
 				if (retsize) {
+					//std::cout << "activity " << a.id << "returned with value " << *(int*)retvalue << std::endl;//DEBUG
 					a_next.params[port].second = malloc(retsize);
 					std::memcpy(a_next.params[port].second, retvalue, retsize);
 				} else
 					a_next.params[port].second = nullptr;
 			}
 			// Resolve dependency for successor activities. If 0 left, put the activity in the ready queue.
-			if (--a_next.n_unresolved == 0)
+			if (--a_next.n_unresolved == 0) {
 				ready_q.emplace(std::make_pair(&a_next, a_next.dependent_ops.size()));
+			}
 		}
 	}
 
@@ -70,7 +82,7 @@ void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize) {
 			free(arg.second);
 	}
 
-	// Deallocate result buffer
+	// Deallocate result temporary buffer
 	if (retsize)
 		free(retvalue);
 }
@@ -86,7 +98,7 @@ void Task::run_activity(Activity& a) {
 	D(std::cout << "Executing activity #" << a.id << std::endl;)
 
 	// Set up the actual arguments
-	std::vector<void *> args;
+	std::vector<void*> args;
 	args.reserve(a.params.size());
 	for (auto const &arg : a.params)
 		args.push_back(arg.second);
