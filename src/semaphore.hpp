@@ -14,6 +14,7 @@ class Semaphore
 
 	public:
 		Semaphore(unsigned cnt);
+		void set(unsigned cnt);
 	    void wait();
 	    bool wait_limited(const std::chrono::milliseconds& rel_time);
 	    void signal();

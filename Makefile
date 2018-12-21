@@ -3,40 +3,35 @@ CFLAGS = -Wall
 #DEBUG = -DDEBUG
 DEBUG = 
 PTHREAD = -lpthread
-SRC = src
+
+BIN = bin
 BUILD = build
+SRC = src
+TEST = test
 
 .PHONY: all clean
 
-all: main
+all: test1 test2
 
 ################
 # Object files #
 ################
 
-$(BUILD)/activity.o: $(SRC)/activity.cpp
-	$(CC) $(CFLAGS) $(DEBUG) -c $(SRC)/activity.cpp -o $(BUILD)/activity.o
 
-$(BUILD)/main.o: $(SRC)/main.cpp
-	$(CC) $(CFLAGS) $(DEBUG) -c $(SRC)/main.cpp -o $(BUILD)/main.o
-
-$(BUILD)/parallelizer.o: $(SRC)/parallelizer.cpp
-	$(CC) $(CFLAGS) $(DEBUG) -c $(SRC)/parallelizer.cpp -o $(BUILD)/parallelizer.o
-
-$(BUILD)/semaphore.o: $(SRC)/semaphore.cpp
-	$(CC) $(CFLAGS) $(DEBUG) -c $(SRC)/semaphore.cpp -o $(BUILD)/semaphore.o
-
-$(BUILD)/task.o: $(SRC)/task.cpp
-	$(CC) $(CFLAGS) $(DEBUG) -c $(SRC)/task.cpp -o $(BUILD)/task.o
+$(BUILD)/%.o: $(SRC)/%.cpp
+	$(CC) $(CFLAGS) $(DEBUG) -c -o $@ $<
+	
+$(BUILD)/%.o: $(TEST)/%.cpp
+	$(CC) $(CFLAGS) $(DEBUG) -c -o $@ $<
 
 
 ################
 # Executables  #
 ################
 
-main: $(BUILD)/main.o $(BUILD)/parallelizer.o $(BUILD)/activity.o $(BUILD)/semaphore.o $(BUILD)/task.o
-	$(CC) $(PTHREAD) $(BUILD)/main.o $(BUILD)/parallelizer.o $(BUILD)/activity.o $(BUILD)/semaphore.o $(BUILD)/task.o -o main
+test%: $(BUILD)/test%.o $(BUILD)/parallelizer.o $(BUILD)/activity.o $(BUILD)/semaphore.o $(BUILD)/task.o
+	$(CC) -o $(BIN)/$@ $^ $(PTHREAD)
 
 
 clean:
-	rm -f $(BUILD)/*.o main
+	rm -f $(BUILD)/*.o $(BIN)/test*

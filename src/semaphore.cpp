@@ -6,6 +6,15 @@ Semaphore::Semaphore(unsigned cnt) :
 {}
 
 
+/* Set the semaphore count to the specified value */
+void Semaphore::set(unsigned cnt)
+{
+    std::unique_lock<std::mutex> lock(mtx);
+    
+    count = cnt;
+}
+
+
 void Semaphore::wait()
 {
     std::unique_lock<std::mutex> lock(mtx);

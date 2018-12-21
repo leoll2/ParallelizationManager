@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "parallelizer.hpp"
-#include "debug.hpp"
 
 
 std::atomic_int PManager::Worker::ID_gen = ATOMIC_VAR_INIT(0);
@@ -28,7 +27,10 @@ void PManager::Worker::routine()
 		// Execute the code of the activity (here is the core of the routine)
 		cur_task->run_activity(*cur_act);
 
-		D(std::cout << "Worker " << id << " finished activity " << cur_act->id << std::endl);
+        // Signal the end of an activity
+        master->act_finished.signal();
+        
+		D(std::cout << "[W] Worker " << id << " finished activity " << cur_act->id << std::endl);
 
 		// After finishing, notify the master about the worker being available again
 		master->free_worker(this);
@@ -65,7 +67,8 @@ void PManager::Worker::join(void)
 
 
 /* Manager constructor */
-PManager::PManager(unsigned pool_size) : 
+PManager::PManager(unsigned pool_size) :
+    act_finished(0),
 	n_workers(pool_size)
 {
 	// Allocate a pool of threads
@@ -146,7 +149,7 @@ Activity* PManager::schedule_activity() {
 		scheduled_act = (*it)->schedule();
 		// If found, return it
 		if (scheduled_act) {
-			D(std::cout << "Got an activity to schedule." << std::endl;)
+			D(std::cout << "[M] Got an activity to schedule." << std::endl;)
 			return scheduled_act;
 		} else {  // Move to the next task
 			// But not before checking if task was finished (if so, remove from runqueue)
@@ -156,7 +159,7 @@ Activity* PManager::schedule_activity() {
 				it++;
 		}
 	}
-	D(std::cout << "Found nothing to schedule." << std::endl;)
+	D(std::cout << "[M] Found nothing to schedule." << std::endl;)
 	return nullptr;
 }
 
@@ -173,6 +176,9 @@ void PManager::run()
 
 	// As long as there are unfinished tasks
 	while (runqueue.size()) {
+	    // Detect if any worker notifies the end of an activity from now on
+	    act_finished.set(0);
+	    //std::cout << "[M] Set to 0" << std::endl;   //DEBUG
 		// Try to schedule the next activity
 		scheduled_act = schedule_activity();
 		// If any is available, find a worker to which the activity ought to be assigned
@@ -183,10 +189,18 @@ void PManager::run()
 			w->cur_task = scheduled_act->owner;
 			w->data_avail.signal();
 
-			D(std::cout << "Activity " << scheduled_act->id << " assigned to worker " << w->id << std::endl);
-		} else {  // otherwise, if no activity available, wait for one to become available
-			// TODO
-			
+			D(std::cout << "[M] Activity " << scheduled_act->id << " assigned to worker " << w->id << std::endl);
+		} else {
+		    /* Tasks are removed from runqueue only after being fully completed. 
+		       Therefore, if runqueue is empty, it means that all tasks were finished. */
+		    if (!runqueue.size())
+		        return;
+		    /* If no activity is schedulable, wait for another to finish (signaled by worker)
+		       before checking again. If a worker finished right after we had checked for available
+		       activities, this semaphore is not 0 and the wait doesn't block indeed.
+		       A simple condition_variable would not be enough to handle signal before wait. */
+		    D(std::cout << "[M] Waiting for a worker to finish... " << std::endl);
+			act_finished.wait();
 		}
 	}
 }

@@ -9,6 +9,7 @@
 #include <thread>
 
 #include "activity.hpp"
+#include "debug.hpp"
 #include "semaphore.hpp"
 #include "task.hpp"
 
@@ -42,8 +43,8 @@ class PManager
 		std::set<Worker*> avail_workers;		// set of available (not busy) workers
 		std::mutex avail_workers_mtx;			// mutex to protect available workers pool
 		std::condition_variable worker_avail;	// signaled when a worker becomes available
+		Semaphore act_finished;                 // signaled when a worker finishes a task
 		
-
 		bool any_worker_available();
 		Worker* hire_worker();
 		void free_worker(Worker *w);
