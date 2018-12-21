@@ -76,10 +76,12 @@ void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize)
 		}
 	}
 
-	// Deallocate actual arguments
-	for (auto &arg : a.params) {
-		if (arg.first && arg.second)
-			free(arg.second);
+	// Deallocate actual arguments (except the first, which is allocated externally)
+	auto arg = ++std::begin(a.params);
+	while (arg != std::end(a.params)) {
+	    if ((*arg).first && (*arg).second)
+			free((*arg).second);
+		++arg;
 	}
 
 	// Deallocate result temporary buffer

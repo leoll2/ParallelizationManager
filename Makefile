@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -Wall
-#DEBUG = -DDEBUG
-DEBUG = 
+DEBUG = -DDEBUG
+#DEBUG = 
 PTHREAD = -lpthread
 
 BIN = bin
@@ -11,7 +11,7 @@ TEST = test
 
 .PHONY: all clean
 
-all: test1 test2
+all: $(BIN)/test1 $(BIN)/test2
 
 ################
 # Object files #
@@ -22,15 +22,15 @@ $(BUILD)/%.o: $(SRC)/%.cpp
 	$(CC) $(CFLAGS) $(DEBUG) -c -o $@ $<
 	
 $(BUILD)/%.o: $(TEST)/%.cpp
-	$(CC) $(CFLAGS) $(DEBUG) -c -o $@ $<
+	$(CC) $(CFLAGS) $(DEBUG) -I$(SRC) -c -o $@ $<
 
 
 ################
 # Executables  #
 ################
 
-test%: $(BUILD)/test%.o $(BUILD)/parallelizer.o $(BUILD)/activity.o $(BUILD)/semaphore.o $(BUILD)/task.o
-	$(CC) -o $(BIN)/$@ $^ $(PTHREAD)
+$(BIN)/test%: $(BUILD)/test%.o $(BUILD)/parallelizer.o $(BUILD)/activity.o $(BUILD)/semaphore.o $(BUILD)/task.o
+	$(CC) -o $@ $^ $(PTHREAD)
 
 
 clean:

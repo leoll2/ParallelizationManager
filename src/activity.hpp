@@ -38,8 +38,11 @@
     unsigned name::operator() (const std::vector<void*>& args, void **_retbuf)
 
 
-#define GET_ARG(name, type, port) \
+#define DECL_AND_GET_ARG(name, type, port) \
     type name = *(type*)args[(port)];
+    
+#define GET_ARG(name, type, port) \
+    name = *(type*)args[(port)];
 
 
 #define RETRIEVE_RESULT(dst, src, type) \
