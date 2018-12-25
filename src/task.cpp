@@ -10,7 +10,7 @@
 
 
 bool ActivityPrioCompare::operator()(std::pair<Activity*, int> p1, std::pair<Activity*, int> p2) {
-    return p1.second > p2.second;
+	return p1.second > p2.second;
 }
 
 
@@ -79,7 +79,7 @@ void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize)
 	// Deallocate actual arguments (except the first, which is allocated externally)
 	auto arg = ++std::begin(a.params);
 	while (arg != std::end(a.params)) {
-	    if ((*arg).first && (*arg).second)
+		if ((*arg).first && (*arg).second)
 			free((*arg).second);
 		++arg;
 	}
@@ -97,8 +97,6 @@ void Task::run_activity(Activity& a) {
 	void *retbuf;		// buffer to store the result
 	unsigned retsize;	// length of the buffer
 
-	D(std::cout << "Executing activity #" << a.id << std::endl;)
-
 	// Set up the actual arguments
 	std::vector<void*> args;
 	args.reserve(a.params.size());
@@ -107,8 +105,6 @@ void Task::run_activity(Activity& a) {
 
 	// Run the activity specific code
 	retsize = a(args, &retbuf);
-
-	D(std::cout << "Activity #" << a.id << " returned " << retsize << " bytes " << std::endl;)
 
 	// Postprocessing of the result and cleanup actions
 	complete_activity(a, retbuf, retsize);
@@ -137,7 +133,7 @@ bool Task::DFS_traverse(Activity& a) const
 	 		return true;
 	}
 
-    // Mark this vertex as processed eventually
+	// Mark this vertex as processed eventually
 	a.col = Color::BLACK; 
 	return false; 
 }
@@ -160,7 +156,7 @@ bool Task::is_DAG() const
 				return false;
 	}
   
-    return true;
+	return true;
 }
 
 
@@ -243,11 +239,11 @@ int Task::link_ret_to_arg(Activity& a_src, Activity& a_dst, unsigned port)
 
 std::ostream& operator<<(std::ostream& os, const Task& t) {
 
-	os << "=== Task ===" << std::endl;
+	os << "===== Task =====" << std::endl;
 	for (auto const &a : t.activities) {
 		os << *a << std::endl;
 	}
 	std::cout << "Is Directed Acyclic Graph: " << (t.is_DAG() ? "yes" : "no") << std::endl;
-	os << "============" << std::endl;
+	os << "================" << std::endl;
 	return os;
 }

@@ -18,7 +18,7 @@
 #
 #############################*/
 
-#define EXPECTED_RES    1496
+#define EXPECTED_RES	1496
 
 #include <algorithm>
 #include <cassert>
@@ -33,10 +33,10 @@ const unsigned N = 16;
 
 ACTIVITY(SquareOp)
 {
-    DECL_AND_GET_ARG(x, int, 0)
-    
+	DECL_AND_GET_ARG(x, int, 0)
+
 	int res = x * x;
-	//std::this_thread::sleep_for (std::chrono::seconds(1));
+	std::this_thread::sleep_for (std::chrono::seconds(1));
 
 	RETURN(res)
 }
@@ -44,9 +44,9 @@ ACTIVITY(SquareOp)
 
 ACTIVITY(SumOp)
 {
-    std::vector<int> squares(N);
-    for (unsigned i = 1; i <= N; ++i)
-	    GET_ARG(squares[i-1], int, i)
+	std::vector<int> squares(N);
+	for (unsigned i = 1; i <= N; ++i)
+		GET_ARG(squares[i-1], int, i)
 
 	int res = std::accumulate(squares.begin(), squares.end(), 0);
 	//std::this_thread::sleep_for (std::chrono::seconds(1));
@@ -61,23 +61,23 @@ int main() {
 	void *ret;
 	int result;
 
-    std::vector<int> values(N);
-    std::iota(values.begin(), values.end(), 1);
+	std::vector<int> values(N);
+	std::iota(values.begin(), values.end(), 1);
 
 	PManager m(8);
 
 	Task t(ret);
 
-    SumOp sum_op(NULL, true);
-    t.add_activity(sum_op);
+	SumOp sum_op(NULL, true);
+	t.add_activity(sum_op);
 
-    std::vector<SquareOp*> sq_ops(N);
-    for (unsigned i = 0; i < N; ++i) {
-        sq_ops[i] = new SquareOp(&values[i]);
-        t.add_activity(*sq_ops[i]);
-        t.add_dependency(*sq_ops[i], sum_op);
-        t.link_ret_to_arg(*sq_ops[i], sum_op, i+1);
-    }
+	std::vector<SquareOp*> sq_ops(N);
+	for (unsigned i = 0; i < N; ++i) {
+		sq_ops[i] = new SquareOp(&values[i]);
+		t.add_activity(*sq_ops[i]);
+		t.add_dependency(*sq_ops[i], sum_op);
+		t.link_ret_to_arg(*sq_ops[i], sum_op, i+1);
+	}
 
 	D(std::cout << t << std::endl);
 
@@ -87,8 +87,8 @@ int main() {
 
 	RETRIEVE_RESULT(result, ret, int);
 
-    std::cout << "Test 2" << std::endl;
-    std::cout << "Expected result: " << EXPECTED_RES << std::endl;
+	std::cout << "Test 2" << std::endl;
+	std::cout << "Expected result: " << EXPECTED_RES << std::endl;
 	std::cout << "Final result: " << result << std::endl;
 
 	assert((result == EXPECTED_RES) && "Wrong result!");

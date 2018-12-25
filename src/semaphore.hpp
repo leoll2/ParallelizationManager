@@ -8,16 +8,16 @@
 class Semaphore
 {
 	private:
-	    std::mutex mtx;
-	    std::condition_variable cond;
-	    unsigned count;
+		std::mutex mtx;
+		std::condition_variable cond;
+		unsigned count;
 
 	public:
 		Semaphore(unsigned cnt);
 		void set(unsigned cnt);
-	    void wait();
-	    bool wait_limited(const std::chrono::milliseconds& rel_time);
-	    void signal();
+		void wait();
+		bool wait_limited(const std::chrono::milliseconds& rel_time);
+		void signal();
 };
 
 #endif

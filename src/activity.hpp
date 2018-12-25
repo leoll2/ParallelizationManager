@@ -51,14 +51,15 @@
 
 
 
-
-enum class Color {WHITE, GREY, BLACK};	/**< used for DAG verification:
-											 WHITE: node not explored yet 
-											 GREY: node currently being explored
-											 BLACK: node explored and all its descendants */
-
+/* Node 'color', used in DAG validation algorithm:
+*	WHITE: node not explored yet 
+*	GREY: node currently being explored
+*	BLACK: node explored and all its descendants
+*/
+enum class Color {WHITE, GREY, BLACK};
 
 class Task;
+
 
 //////////////////////////////////////////////////////////////////////////
 //																		//
@@ -69,18 +70,18 @@ class Task;
 class Activity
 {
 	private:
-		static int ID_gen;				///< ID generator
-		int id;							///< ID (for debug purposes only)
-		Task *owner;					///< task owning this activity
-		std::vector<std::pair<bool, void*> > params; 	/**< routine arguments.
-															 The first is passed directly, others come from dep results
-															 (port allocated, pointer to arg) */
-		std::map<Activity*, int> dependent_ops;			/**< activities directly depending on this
-															 (operation, ret value port) */
-		std::atomic_int n_unresolved;	///< no. of yet unresolved dependencies (updated during execution)
-		bool is_endpoint;				///< is it the final task?
-		void **final_res;				///< if final task, pointer to buffer to store the result
-		Color col;						///< used for DAG verification
+		static int ID_gen;				// ID generator
+		int id;							// ID (for debug purposes only)
+		Task *owner;					// task owning this activity
+		std::vector<std::pair<bool, void*> > params; 	/* routine arguments.
+														   The first is passed directly, others come from dep results
+														   (port allocated, pointer to arg) */
+		std::map<Activity*, int> dependent_ops;			/* activities directly depending on this
+														   (operation, ret value port) */
+		std::atomic_int n_unresolved;	// no. of yet unresolved dependencies (updated during execution)
+		bool is_endpoint;				// is it the final task?
+		void **final_res;				// if final task, pointer to buffer to store the result
+		Color col;						// used for DAG verification
 
 	public:	
 		Activity(void *direct_arg, bool endpoint = false);

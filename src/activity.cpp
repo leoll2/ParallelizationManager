@@ -24,12 +24,13 @@ std::ostream& operator<<(std::ostream& os, const Activity& a)
 {
 
 	os << "Activity #" << a.id << std::endl;
-	os << "Parameters: ";
+	os << "No. of parameters: ";
+	unsigned count = 0;
 	for (auto const &arg : a.params)
-		os << (arg.first ? "1 " : "0 ");
-	os << std::endl;
-	os << "# of unresolved dependencies " << a.n_unresolved << std::endl;
-	os << "Dependent ops: ";
+		count += (arg.first) ? 1 : 0;
+	os << count << std::endl;
+	os << "No. of dependencies: " << a.n_unresolved << std::endl;
+	os << "Dependent activities (id, [port]): " << std::endl;
 	for (auto const &dep : a.dependent_ops)
 		os << "(" << (*(dep.first)).id << " [" << dep.second << "])";
 	os << std::endl;

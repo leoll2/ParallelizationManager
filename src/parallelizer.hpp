@@ -28,7 +28,7 @@ class PManager
 				static std::atomic_int ID_gen;	// worker ID generator
 				const int id;					// worker unique identifier
 				std::atomic_bool should_stop;	// the worker's thread should terminate
-    			Semaphore data_avail;			// signaled by manager after filling cur_act and cur_task
+				Semaphore data_avail;			// signaled by manager after filling cur_act and cur_task
 
 				Worker(PManager *owner);
 				~Worker();
@@ -43,7 +43,7 @@ class PManager
 		std::set<Worker*> avail_workers;		// set of available (not busy) workers
 		std::mutex avail_workers_mtx;			// mutex to protect available workers pool
 		std::condition_variable worker_avail;	// signaled when a worker becomes available
-		Semaphore act_finished;                 // signaled when a worker finishes a task
+		Semaphore act_finished;	    		    // signaled when a worker finishes a task
 		
 		bool any_worker_available();
 		Worker* hire_worker();

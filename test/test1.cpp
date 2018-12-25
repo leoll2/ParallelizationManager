@@ -17,7 +17,7 @@
 #
 #############################*/
 
-#define EXPECTED_RES    38
+#define EXPECTED_RES	38
 
 #include <cassert>
 #include <iostream>
@@ -121,8 +121,8 @@ int main() {
 
 	RETRIEVE_RESULT(result, ret, int);
 
-    std::cout << "Test 1" << std::endl;
-    std::cout << "Expected result: " << EXPECTED_RES << std::endl;
+	std::cout << "Test 1" << std::endl;
+	std::cout << "Expected result: " << EXPECTED_RES << std::endl;
 	std::cout << "Final result: " << result << std::endl;
 
 	assert((result == EXPECTED_RES) && "Wrong result!");

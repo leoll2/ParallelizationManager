@@ -9,19 +9,19 @@ Semaphore::Semaphore(unsigned cnt) :
 /* Set the semaphore count to the specified value */
 void Semaphore::set(unsigned cnt)
 {
-    std::unique_lock<std::mutex> lock(mtx);
-    
-    count = cnt;
+	std::unique_lock<std::mutex> lock(mtx);
+	
+	count = cnt;
 }
 
 
 void Semaphore::wait()
 {
-    std::unique_lock<std::mutex> lock(mtx);
+	std::unique_lock<std::mutex> lock(mtx);
 
-    while(!count)
-        cond.wait(lock);
-    --count;
+	while(!count)
+		cond.wait(lock);
+	--count;
 }
 
 
@@ -31,20 +31,20 @@ bool Semaphore::wait_limited(const std::chrono::milliseconds& rel_time)
 	std::cv_status ret;
 	std::unique_lock<std::mutex> lock(mtx);
 
-    while(!count) {
-        ret = cond.wait_for(lock, rel_time);
-        if (ret == std::cv_status::timeout)
-        	return false;
-    }
-    --count;
-    return true;
+	while(!count) {
+		ret = cond.wait_for(lock, rel_time);
+		if (ret == std::cv_status::timeout)
+			return false;
+	}
+	--count;
+	return true;
 }
 
 
 void Semaphore::signal()
 {
-    std::lock_guard<std::mutex> lock(mtx);
-    
-    ++count;
-    cond.notify_one();
+	std::lock_guard<std::mutex> lock(mtx);
+	
+	++count;
+	cond.notify_one();
 }

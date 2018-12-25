@@ -16,21 +16,21 @@ std::atomic_int PManager::Worker::ID_gen = ATOMIC_VAR_INIT(0);
 void PManager::Worker::routine()
 {
 	while(true) {
-
 		// Wait for manager to put something in cur_act, but periodically check if should stop!
 		while (!data_avail.wait_limited(std::chrono::milliseconds(100))) {
     		// If the worker is asked to stop, this is the safest moment (no activity in progress)
 			if (should_stop)
 				return;
   		}
-
+        D(std::cout << "[W" << id << "]" << " starting activity " << cur_act->id << std::endl);
+        
 		// Execute the code of the activity (here is the core of the routine)
 		cur_task->run_activity(*cur_act);
 
         // Signal the end of an activity
         master->act_finished.signal();
-        
-		D(std::cout << "[W] Worker " << id << " finished activity " << cur_act->id << std::endl);
+                
+		D(std::cout << "[W" << id << "]" << " finished activity " << cur_act->id << std::endl);
 
 		// After finishing, notify the master about the worker being available again
 		master->free_worker(this);
@@ -149,7 +149,6 @@ Activity* PManager::schedule_activity() {
 		scheduled_act = (*it)->schedule();
 		// If found, return it
 		if (scheduled_act) {
-			D(std::cout << "[M] Got an activity to schedule." << std::endl;)
 			return scheduled_act;
 		} else {  // Move to the next task
 			// But not before checking if task was finished (if so, remove from runqueue)
@@ -159,7 +158,6 @@ Activity* PManager::schedule_activity() {
 				it++;
 		}
 	}
-	D(std::cout << "[M] Found nothing to schedule." << std::endl;)
 	return nullptr;
 }
 
@@ -183,7 +181,6 @@ void PManager::run()
 		scheduled_act = schedule_activity();
 		// If any is available, find a worker to which the activity ought to be assigned
 		if (scheduled_act) {
-
 			Worker *w = hire_worker();
 			w->cur_act = scheduled_act;
 			w->cur_task = scheduled_act->owner;
@@ -199,7 +196,7 @@ void PManager::run()
 		       before checking again. If a worker finished right after we had checked for available
 		       activities, this semaphore is not 0 and the wait doesn't block indeed.
 		       A simple condition_variable would not be enough to handle signal before wait. */
-		    D(std::cout << "[M] Waiting for a worker to finish... " << std::endl);
+		    D(std::cout << "[M] No activity to schedule yet, waiting for a worker to finish... " << std::endl);
 			act_finished.wait();
 		}
 	}

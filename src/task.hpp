@@ -13,7 +13,7 @@ class Activity;
 class ActivityPrioCompare
 {
 	public:
-	    bool operator()(std::pair<Activity*, int> p1, std::pair<Activity*, int> p2);
+		bool operator()(std::pair<Activity*, int> p1, std::pair<Activity*, int> p2);
 };
 
 
