@@ -20,6 +20,12 @@ Compile with:
 make
 ```
 
+## Nomenclature
+These terms will be extensively used in the following description. Here is a clarification about their meaning in this context.
+- Activity: a self-contained sequence of instructions (that is, C++ code) which is to be executed by one thread.
+- Task: a collection of activities, arranged as a DAG by precedence; independent activities can be executed in parallel.
+- Manager: entity which decides the next activity to execute, according to a scheduling policy, and assigns it to an available worker.
+- Worker: basically a thread which can execute one activity at a time.
 
 ## Usage
 
@@ -40,7 +46,12 @@ If an activity needs arguments to execute, these can be retrieved with:
 ```
 GET_ARG(<Parameter>, <Type>, <Port>)
 ```
-where `<Parameter>` is the name we use to refer to the argument, `<Type>` is the data type and `<Port>` is the index of this argument among all those passed to the activity (must be the same specified in `link_ret_to_arg()`.
+where `<Parameter>` is the local variable to store the argument, `<Type>` is the data type and `<Port>` is the index of this argument among all those passed to the activity (must be the same specified in `link_ret_to_arg()`.
+
+There is also a shortcut to declare the local variable and retrieve the argument at once:
+```
+DECL_AND_GET_ARG(<Parameter>, <Type>, <Port>)
+```
 
 **Example**
 For instance, this is what the activity of adding two integers looks like:
@@ -48,8 +59,8 @@ For instance, this is what the activity of adding two integers looks like:
 ```
 ACTIVITY(Sum)
 {
-	GET_ARG(a, int, 1)
-	GET_ARG(b, int, 2)
+	DECL_AND_GET_ARG(a, int, 1)
+	DECL_AND_GET_ARG(b, int, 2)
 
 	int res = a + b;
 	
