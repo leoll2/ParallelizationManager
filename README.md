@@ -2,19 +2,22 @@
 ParallelizationManager helps you writing parallelizable programs and execute their operations on multiple threads concurrently. In other words, ParallelizationManager is a thread pool scheduler for parallelizable tasks whose dependencies can be modeled as a Directed Acyclic Graph (DAG).
 
 ## Table of Contents
-- [Obtain](#obtain)
+- [Install](#install)
+- [Nomenclature](#nomenclature)
 - [Usage](#usage)
   - [Activity](#activity)
+  - [Task](#task)
+  - [Manager](#manager)
 
-## Obtain
+## Install
 
-Download with:
+Download the repo with:
 
 ```
 git clone https://www.github.com/leoll2/ParallelizationManager.git
 ```
 
-Compile with:
+Compile it with:
 
 ```
 make
@@ -25,13 +28,13 @@ These terms will be extensively used in the following description. Here is a cla
 - Activity: a self-contained sequence of instructions (that is, C++ code) which is to be executed by one thread.
 - Task: a collection of activities, arranged as a DAG by precedence; independent activities can be executed in parallel.
 - Manager: entity which decides the next activity to execute, according to a scheduling policy, and assigns it to an available worker.
-- Worker: basically a thread which can execute one activity at a time.
+- Worker: a thread which can execute one activity at a time.
 
 ## Usage
 
 ### Activity
 
-An activity is declared according to the following syntax, where `<Name>` is the indeed the name of the activity, and `<Code>` contains the actual instructions to be executed.
+The body of an activity is declared according to the following syntax, where `<Name>` is the indeed the name of the activity, and `<Code>` contains the actual instructions to be executed.
 
 ```
 ACTIVITY(<Name>)
@@ -39,6 +42,12 @@ ACTIVITY(<Name>)
 	<Code>
 }
 ```
+
+The activity itself is then declared as an object, like this:
+```
+<Name> <ObjName>(<Arg>[,<Endpoint>]);
+```
+where `<Name>` corresponds to the code declaration, `<ObjName>` identifies this particular instance of the activity, `<Arg>` is a void pointer to directly pass an argument, and `<Endpoint>` is optional and used to mark the last activity of the task.
 
 **Arguments**
 
