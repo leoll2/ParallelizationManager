@@ -111,15 +111,27 @@ PManager m(<PoolSize>);
 
 where `<PoolSize>` is the number of allocated worker threads.
 
+Tasks can be assigned to the manager with `add_task`:
+
+```
+<Manager>.add_task(<Task>);
+```
+
+After adding tasks, the manager can be started:
+
+```
+<Manager>.run();
+```
+
 ## Scheduling
 
 In order to understand the scheduling policy adopted by the manager, it's easier to start considering the case of a single task.
 
-## Single task
+### Single task
 The manager can only execute tasks whose dependencies have already been solved (i.e., the corresponding activities have been completed). When multiple activities are ready for execution, the manager prioritizes the one which is directly required by the largest number of other activities. In other words, if 3 activities depend from A, and only 2 depend from B, the manager schedules A first.
 Ready activities are kept in a priority queue, and the priority is indeed the number of dependant activities.
 
-## Multiple tasks
+### Multiple tasks
 
 When multiple tasks are available, their ready queues become part of a multi-level FCFS queue.
 The manager tries to schedule an activity from the ready queue of the first task; if no activity is available, it attempts to schedule one from the next queue, and so on. Still, within every queue, the previously described policy remains valid.
@@ -143,3 +155,4 @@ Otherwise, you can launch them all, one after the other, with a simple shell scr
 ## Notes
 
 - In the Makefile, add the flag `DDEBUG` if you want the manager to be verbose during its activity.
+- If your program is aborted due to a memory error, it is likely that you overlooked something while defining dependencies and arguments. Please double check your code first, then feel free to open an issue request if the problem persists.
