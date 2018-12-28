@@ -2,6 +2,10 @@
 #
 # Test_1
 #
+# Purpose: show how activities work and are scheduled.
+#
+# Description: Compute (((8+5)*2)+((8+5)-1))
+#
 # Activities:
 # a1  = 8
 # a2  = a1 + 5

@@ -2,6 +2,11 @@
 #
 # Test_2
 #
+# Purpose: show a highly parallelizable task, whose number
+# of ready activities sometimes exceeds the available workers
+#
+# Description: Compute the sum of the first 16 square numbers
+#
 # Parameters:
 # i = 1..16
 # x[i] = i

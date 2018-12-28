@@ -11,7 +11,7 @@ TEST = test
 
 .PHONY: all clean
 
-all: $(BIN)/test1 $(BIN)/test2
+all: $(BIN)/test1 $(BIN)/test2 $(BIN)/test3
 
 ################
 # Object files #
