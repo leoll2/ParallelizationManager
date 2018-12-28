@@ -11,9 +11,11 @@
 
 #include "task.hpp"
 
+
+
 //////////////////////////////////////////////////////////////////////////
 //																		//
-//	Handy MACROS to handle activities, their arguments and return value //
+//  Handy MACROS to handle activities, their arguments and return value //
 //																		//
 //////////////////////////////////////////////////////////////////////////
 
@@ -54,16 +56,16 @@
 /* Node 'color', used in DAG validation algorithm:
 *	WHITE: node not explored yet 
 *	GREY: node currently being explored
-*	BLACK: node explored and all its descendants
-*/
+*	BLACK: node explored and all its descendants */
 enum class Color {WHITE, GREY, BLACK};
+
 
 class Task;
 
 
 //////////////////////////////////////////////////////////////////////////
 //																		//
-//	Class ACTIVITY describes an operation that is part of a larger task //
+//  Class ACTIVITY describes an operation that is part of a larger task //
 //																		//
 //////////////////////////////////////////////////////////////////////////
 

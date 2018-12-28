@@ -18,18 +18,18 @@ void PManager::Worker::routine()
 	while(true) {
 		// Wait for manager to put something in cur_act, but periodically check if should stop!
 		while (!data_avail.wait_limited(std::chrono::milliseconds(100))) {
-    		// If the worker is asked to stop, this is the safest moment (no activity in progress)
+			// If the worker is asked to stop, this is the safest moment (no activity in progress)
 			if (should_stop)
 				return;
   		}
-        D(std::cout << "[W" << id << "]" << " starting activity " << cur_act->id << std::endl);
-        
+		D(std::cout << "[W" << id << "]" << " starting activity " << cur_act->id << std::endl);
+		
 		// Execute the code of the activity (here is the core of the routine)
 		cur_task->run_activity(*cur_act);
 
-        // Signal the end of an activity
-        master->act_finished.signal();
-                
+		// Signal the end of an activity
+		master->act_finished.signal();
+
 		D(std::cout << "[W" << id << "]" << " finished activity " << cur_act->id << std::endl);
 
 		// After finishing, notify the master about the worker being available again
@@ -68,7 +68,7 @@ void PManager::Worker::join(void)
 
 /* Manager constructor */
 PManager::PManager(unsigned pool_size) :
-    act_finished(0),
+	act_finished(0),
 	n_workers(pool_size)
 {
 	// Allocate a pool of threads
@@ -174,9 +174,9 @@ void PManager::run()
 
 	// As long as there are unfinished tasks
 	while (runqueue.size()) {
-	    // Detect if any worker notifies the end of an activity from now on
-	    act_finished.set(0);
-	    //std::cout << "[M] Set to 0" << std::endl;   //DEBUG
+		// Detect if any worker notifies the end of an activity from now on
+		act_finished.set(0);
+		//std::cout << "[M] Set to 0" << std::endl;   //DEBUG
 		// Try to schedule the next activity
 		scheduled_act = schedule_activity();
 		// If any is available, find a worker to which the activity ought to be assigned
@@ -189,15 +189,15 @@ void PManager::run()
 			D(std::cout << "[M] Activity " << scheduled_act->id 
 			            << " (task " << w->cur_task->id << ") assigned to worker " << w->id << std::endl);
 		} else {
-		    /* Tasks are removed from runqueue only after being fully completed. 
-		       Therefore, if runqueue is empty, it means that all tasks were finished. */
-		    if (!runqueue.size())
-		        return;
-		    /* If no activity is schedulable, wait for another to finish (signaled by worker)
-		       before checking again. If a worker finished right after we had checked for available
-		       activities, this semaphore is not 0 and the wait doesn't block indeed.
-		       A simple condition_variable would not be enough to handle signal before wait. */
-		    D(std::cout << "[M] No activity to schedule yet, waiting for a worker to finish... " << std::endl);
+			/* Tasks are removed from runqueue only after being fully completed. 
+			   Therefore, if runqueue is empty, it means that all tasks were finished. */
+			if (!runqueue.size())
+				return;
+			/* If no activity is schedulable, wait for another to finish (signaled by worker)
+			   before checking again. If a worker finished right after we had checked for available
+			   activities, this semaphore is not 0 and the wait doesn't block indeed.
+			   A simple condition_variable would not be enough to handle signal before wait. */
+			D(std::cout << "[M] No activity to schedule yet, waiting for a worker to finish... " << std::endl);
 			act_finished.wait();
 		}
 	}
