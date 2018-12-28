@@ -176,7 +176,6 @@ void PManager::run()
 	while (runqueue.size()) {
 		// Detect if any worker notifies the end of an activity from now on
 		act_finished.set(0);
-		//std::cout << "[M] Set to 0" << std::endl;   //DEBUG
 		// Try to schedule the next activity
 		scheduled_act = schedule_activity();
 		// If any is available, find a worker to which the activity ought to be assigned
