@@ -6,7 +6,7 @@
 #  ./main
 #done
 
-for i in {1..2}
+for i in {1..3}
 do
   echo ==================
   bin/test$i

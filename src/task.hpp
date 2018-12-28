@@ -20,14 +20,14 @@ class ActivityPrioCompare
 class Task
 {
 	private:
-		std::vector<Activity*> activities;			// all the activities of the task
-		std::priority_queue<std::pair<Activity*, int>, std::vector<std::pair<Activity*, int>>, ActivityPrioCompare> ready_q;	
-													/* operations ready to execute (all deps satisfied)
-													   (operation, priority) */
-		std::mutex ready_q_mtx;						// mutex to protect ready_q
-		bool has_endpoint;							// used to verify that there's one and only one endpoint activity
-		bool completed;								// true when all the activities are finished
-		void **result;								// pointer to buffer to store the final result of the task
+		static int ID_gen;          // ID generator
+		int id;                     // ID
+		std::vector<Activity*> activities;  // all the activities of the task
+		std::priority_queue<std::pair<Activity*, int>, std::vector<std::pair<Activity*, int>>, ActivityPrioCompare> ready_q;	    // operations ready to execute (all deps satisfied) (operation, priority)
+		std::mutex ready_q_mtx;     // mutex to protect ready_q
+		bool has_endpoint;          // used to verify that there's one and only one endpoint activity
+		bool completed;             // true when all the activities are finished
+		void **result;              // pointer to buffer to store the final result of the task
 
 		void init_ready_q();
 		Activity* schedule();

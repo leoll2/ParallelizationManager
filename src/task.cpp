@@ -13,6 +13,7 @@ bool ActivityPrioCompare::operator()(std::pair<Activity*, int> p1, std::pair<Act
 	return p1.second > p2.second;
 }
 
+int Task::ID_gen = 0;
 
 /* Initialize the ready queue of the task, inserting those activities which 
 *  don't have dependencies at all, */
@@ -161,6 +162,7 @@ bool Task::is_DAG() const
 
 
 Task::Task(void*& res) :
+	id(ID_gen++),
 	has_endpoint(false),
 	completed(false),
 	result(&res)
@@ -239,7 +241,8 @@ int Task::link_ret_to_arg(Activity& a_src, Activity& a_dst, unsigned port)
 
 std::ostream& operator<<(std::ostream& os, const Task& t) {
 
-	os << "===== Task =====" << std::endl;
+	os << "================" << std::endl;
+	os << "Task: " << t.id << std::endl;
 	for (auto const &a : t.activities) {
 		os << *a << std::endl;
 	}

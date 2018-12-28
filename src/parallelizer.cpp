@@ -186,7 +186,8 @@ void PManager::run()
 			w->cur_task = scheduled_act->owner;
 			w->data_avail.signal();
 
-			D(std::cout << "[M] Activity " << scheduled_act->id << " assigned to worker " << w->id << std::endl);
+			D(std::cout << "[M] Activity " << scheduled_act->id 
+			            << " (task " << w->cur_task->id << ") assigned to worker " << w->id << std::endl);
 		} else {
 		    /* Tasks are removed from runqueue only after being fully completed. 
 		       Therefore, if runqueue is empty, it means that all tasks were finished. */

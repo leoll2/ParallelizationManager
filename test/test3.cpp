@@ -67,7 +67,7 @@ int main() {
 	void *ret1, *ret2;
 	uint32_t res1, res2;
 
-	PManager m(4);
+	PManager m(2);
 
 	Task t1(ret1);
 	Task t2(ret2);
@@ -112,7 +112,7 @@ int main() {
 	RETRIEVE_RESULT(res1, ret1, uint32_t);
 	RETRIEVE_RESULT(res2, ret2, uint32_t);
 
-	std::cout << "Test 2" << std::endl;
+	std::cout << "Test 3" << std::endl;
 	std::cout << "Expected result: " << EXPECTED_RES << std::endl;
 	std::cout << "Final result: " << res1 - res2 << std::endl;
 
