@@ -133,11 +133,11 @@ void PManager::free_worker(Worker *w)
 }
 
 
-/* Pick an activity that is ready to be executed. The scheduling policy follows.
-*  Consider tasks in FIFO order: if the first task has any activity ready for execution
-*  (i.e. all dependencies are satisfied), then choose one of those; otherwise, move to
-*  the next task and do the same, and so on. If no activity is ready for execution yet,
-*  likely because dependencies are currently being solved, simply return nullptr. */
+/* Pick an activity that is ready to be executed. The scheduling policy is here below.
+*  Consider tasks in FCFS order: if the first task has any activity ready for execution
+*  (i.e. whose dependencies are all satisfied), then choose one of those; otherwise, try
+*  to schedule from the next task, and so on. If no activity is ready for execution yet
+*  (can happen when all their dependencies are work in progress), return nullptr. */
 Activity* PManager::schedule_activity() {
 
 	Activity *scheduled_act;
