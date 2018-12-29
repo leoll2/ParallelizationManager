@@ -204,7 +204,9 @@ void PManager::run()
 			/* If no activity is schedulable, wait for another to finish (signaled by worker)
 			   before checking again. If a worker finished right after we had checked for available
 			   activities, this semaphore is not 0 and the wait doesn't block indeed.
-			   A simple condition_variable would not be enough to handle signal before wait. */
+			   Using only a condition_variable wouldn't be enough, because a notify that occurs 
+			   before wait wouldn't be detected, unless to adopt a more complicated locking system
+			   (that is not trivial because schedule() works on multiple queues). */
 			D(std::cout << "[M] No activity to schedule yet, waiting for a worker to finish... " << std::endl);
 			act_finished.wait();
 		}
