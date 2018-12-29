@@ -26,7 +26,7 @@ void PManager::Worker::routine()
 		D(std::cout << "[W" << id << "]" << " starting activity " << cur_act->id << std::endl);
 		
 		// Execute the code of the activity (here is the core of the routine)
-		cur_task->run_activity(*cur_act);
+		cur_act->owner->run_activity(*cur_act);
 
 		// Signal the end of an activity
 		master->act_finished.signal();
@@ -42,7 +42,6 @@ void PManager::Worker::routine()
 /* Worker constructor */
 PManager::Worker::Worker(PManager *owner) :
 	cur_act(nullptr),
-	cur_task(nullptr),
 	master(owner),
 	id(ID_gen++),
 	should_stop(ATOMIC_VAR_INIT(false)),
@@ -183,11 +182,12 @@ void PManager::run()
 		if (scheduled_act) {
 			Worker *w = hire_worker();
 			w->cur_act = scheduled_act;
-			w->cur_task = scheduled_act->owner;
 			w->data_avail.signal();
 
 			D(std::cout << "[M] Activity " << scheduled_act->id 
-			            << " (task " << w->cur_task->id << ") assigned to worker " << w->id << std::endl);
+			            << " (task " << w->schedulect_act->owner->id 
+			            << ") assigned to worker " << w->id << std::endl
+			);
 		} else {
 			/* Tasks are removed from runqueue only after being fully completed. 
 			   Therefore, if runqueue is empty, it means that all tasks were finished. */

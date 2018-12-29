@@ -21,7 +21,6 @@ class PManager
 		{	
 			private:
 				Activity *cur_act;          // activity currently being processed
-				Task *cur_task;             // task owning the current activity
 				std::thread *thread;        // thread of this worker
 				PManager *const master;     // owner of the worker
 			public:
