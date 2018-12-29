@@ -48,8 +48,8 @@
 
 
 #define RETRIEVE_RESULT(dst, src, type) \
-    dst = *((type*)(src));
-
+    dst = *((type*)(src)); \
+    free(src);
 
 
 
@@ -84,7 +84,7 @@ class Activity
 
 	public:	
 		Activity(void *direct_arg, bool endpoint = false);
-		~Activity();
+		virtual ~Activity();
 		virtual unsigned operator() (const std::vector<void *>& args, void **_retbuf) = 0;
 		friend std::ostream& operator<<(std::ostream& os, const Activity& a);
 		friend class Task;

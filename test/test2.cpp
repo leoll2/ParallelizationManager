@@ -41,7 +41,7 @@ ACTIVITY(SquareOp)
 	DECL_AND_GET_ARG(x, int, 0)
 
 	int res = x * x;
-	std::this_thread::sleep_for (std::chrono::seconds(1));
+	std::this_thread::sleep_for (std::chrono::milliseconds(100));
 
 	RETURN(res)
 }
@@ -91,6 +91,8 @@ int main() {
 	m.run();
 
 	RETRIEVE_RESULT(result, ret, int);
+
+    for (auto &op : sq_ops) delete op;
 
 	std::cout << "Test 2" << std::endl;
 	std::cout << "Expected result: " << EXPECTED_RES << std::endl;

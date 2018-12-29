@@ -44,7 +44,7 @@ ACTIVITY(ROR)
 	DECL_AND_GET_ARG(x, uint32_t, 1)
 
 	uint32_t res = (x >> 1) + ((x & 1) << 31);
-	std::this_thread::sleep_for (std::chrono::milliseconds(20));
+	//std::this_thread::sleep_for (std::chrono::milliseconds(20));
 
 	RETURN(res)
 }
@@ -56,7 +56,7 @@ ACTIVITY(ROL)
 	DECL_AND_GET_ARG(x, uint32_t, 1)
 
 	uint32_t res = (x << 1) + ((x & 0x80000000) >> 31);
-	std::this_thread::sleep_for (std::chrono::milliseconds(10));
+	//std::this_thread::sleep_for (std::chrono::milliseconds(10));
 
 	RETURN(res)
 }
@@ -111,6 +111,9 @@ int main() {
 
 	RETRIEVE_RESULT(res1, ret1, uint32_t);
 	RETRIEVE_RESULT(res2, ret2, uint32_t);
+
+	for (auto &op : ror_ops) delete op;
+	for (auto &op : rol_ops) delete op;
 
 	std::cout << "Test 3" << std::endl;
 	std::cout << "Expected result: " << EXPECTED_RES << std::endl;
