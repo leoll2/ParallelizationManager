@@ -168,6 +168,14 @@ void PManager::run()
 {
 	Activity *scheduled_act;
 
+	// Make sure all the tasks are DAG
+	for (auto const& t : runqueue)
+		if (!t->is_DAG()) {
+			std::cout << "Manager could not run because task " << t->id
+			          << " is not a direct acyclic graph (DAG)" << std::endl;
+			return;	
+		}
+
 	// For every task, setup its ready queue
 	for (auto const& t : runqueue)
 		t->init_ready_q();
