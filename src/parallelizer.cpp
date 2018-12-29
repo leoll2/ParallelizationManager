@@ -12,6 +12,7 @@
 
 std::atomic_int PManager::Worker::ID_gen = ATOMIC_VAR_INIT(0);
 
+
 /* Routine of a worker: wait to be requested by the manager, then execute the appropriate function */
 void PManager::Worker::routine()
 {

@@ -6,6 +6,7 @@
 
 int Activity::ID_gen = 0;
 
+/* Constructor */
 Activity::Activity(void *direct_arg, bool endp) :
 	id(ID_gen++),
 	owner(nullptr),
@@ -16,13 +17,13 @@ Activity::Activity(void *direct_arg, bool endp) :
 }
 
 
-Activity::~Activity()
-{}
+/* Destructor */
+Activity::~Activity() {}
 
 
+/* Ostream operator (for debug/monitoring purposes) */
 std::ostream& operator<<(std::ostream& os, const Activity& a)
 {
-
 	os << "Activity #" << a.id << std::endl;
 	os << "No. of parameters: ";
 	unsigned count = 0;

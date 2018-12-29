@@ -1,8 +1,10 @@
 CC = g++
 CFLAGS = -Wall
-DEBUG = -DDEBUG
-#DEBUG = 
 PTHREAD = -lpthread
+
+# Uncomment the next first OR second line if you want the manager to be verbose OR quiet, respectively
+#DEBUG = -DDEBUG
+DEBUG = 
 
 BIN = bin
 BUILD = build
