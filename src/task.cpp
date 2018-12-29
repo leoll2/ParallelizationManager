@@ -50,8 +50,6 @@ Activity* Task::schedule()
 /* Perform the final actions required after completing the execution on an activity. */
 void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize) 
 {
-	std::unique_lock<std::mutex> lock(ready_q_mtx);
-
 	if (a.is_endpoint) {
 		// Copy the result in the provided buffer
 		*(a.final_res) = malloc(retsize);
@@ -74,6 +72,7 @@ void Task::complete_activity(Activity& a, void *retvalue, unsigned retsize)
 			}
 			// Resolve dependency for successor activities. If none left, insert in ready queue.
 			if (--a_next.n_unresolved == 0) {
+				std::unique_lock<std::mutex> lock(ready_q_mtx);
 				ready_q.emplace(std::make_pair(&a_next, a_next.dependent_ops.size()));
 			}
 		}
